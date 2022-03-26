@@ -1,25 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from './logo.svg';
-import './App.css';
+import './App.scss';
+import Home from './components/Home/Home';
 
 function App() {
+  const height = 120;
+
+  const initialData = require("./sample.json");
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+   <Home
+   initialData = {initialData}
+
+   width={"600px"}
+   height={height+"px"}
+   viewableHeight={height}
+   onSelectedCellChange = {(val: any) => {
+
+    // console.log(val)
+   }}
+
+   />
   );
 }
 
