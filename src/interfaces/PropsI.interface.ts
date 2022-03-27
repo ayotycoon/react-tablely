@@ -1,8 +1,8 @@
 export interface PropsI {
     initialData: string[][],
-    width: string,
-    height: string
+    headerData?: string[][],
+    width: number,
+    height: number
     onSelectedCellChange: (value: any) => void
   
-    viewableHeight:number
   }

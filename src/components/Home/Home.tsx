@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import logo from './logo.svg';
 import './Home.scss';
 import { PropsI } from '../../interfaces/PropsI.interface';
+import { DataColOption, DataRowOption } from '../../interfaces/DataOptionI.interface';
 
-const debug = true;
+const debug = false;
 const selectedCellColor = "#1A73E8"
 const selectedRowOrColumnBackgroundColor = "rgba(231, 239, 253, 1)"
 const selectedRowOrColumnBorderColor = "1px solid rgba(30, 109, 232, 1)"
@@ -13,14 +14,132 @@ const firstRowBackground = "rgba(232, 234, 237, 1)"
 const borderColorAtEdges = "1px solid rgba(188,188,188, 1)";
 const borderColorAtMiddle = "1px solid rgba(188,188,188, 0.5)";
 
+const defaults = {
+  height: 24,
+  width: 60
+}
 
+function isEdgesInParentView(element: HTMLDivElement, parentElement: HTMLDivElement) {
+  const rect = element.getBoundingClientRect();
+
+  const offset = parentElement.getBoundingClientRect().top;
+  
+ const res = [(rect.top-offset) >= 0, (rect.bottom-offset) <= parentElement.clientHeight];
+  return res
+}
+
+
+function getCalculatedRowWithPagination(rowIndex: number, page: number, elPerPage:number){
+
+  return (page * elPerPage )+ rowIndex
+}
+
+
+function DrawColumn({ rowIndex, initialRowIndex, row, header,data,selectedCell,gridTemplateColumns,selectedColumnIndex,onCellClick,handleCellEdgeDrag,editableCellIndex,selectedRowIndex,dataRowOptions }: {
+  rowIndex: number;
+  initialRowIndex: number;
+  row: string[];
+  header: boolean;
+  data: string[][];
+  selectedCell: number[];
+  gridTemplateColumns: string;
+  selectedColumnIndex: number[];
+  onCellClick:(initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
+  handleCellEdgeDrag:(initialRowIndex: number,rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
+  editableCellIndex:number[];
+  selectedRowIndex:number[];
+  dataRowOptions: {[id: string]:DataRowOption}
+}) {
+  return (
+    <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
+
+      {row.map((column, columnIndex) => {
+        const selected = !header && initialRowIndex == selectedCell[0] && columnIndex == selectedCell[1];
+        const styleObj: any = {
+
+          width: "100%",
+          position: "relative",
+          backgroundColor: "white"
+
+        };
+
+        if (selected) {
+          styleObj.border = "1px solid " + selectedCellColor;
+
+        } else {
+          // styleObj.borderRight = columnIndex == data[rowIndex].length - 1 ? borderColorAtEdges : borderColorAtMiddle;
+          styleObj.borderLeft = borderColorAtMiddle;
+        //  if(!header && initialRowIndex != 0)styleObj.borderTop = initialRowIndex == 0 ? borderColorAtEdges : borderColorAtMiddle;
+           styleObj.borderBottom =  borderColorAtMiddle;
+           if(header)styleObj.borderTop =  borderColorAtMiddle;
+
+
+        }
+        if (columnIndex == 0) {
+          styleObj.backgroundColor = firstColumnBackground;
+        }
+        if (header && rowIndex == 0) {
+          styleObj.backgroundColor = firstRowBackground;
+        }
+        if (columnIndex >= selectedColumnIndex[0] && columnIndex <= selectedColumnIndex[1]) {
+          styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
+
+          styleObj.borderLeft = selectedRowOrColumnBorderColor;
+          styleObj.borderRight = selectedRowOrColumnBorderColor;
+
+          if (rowIndex == 0 && header) styleObj.borderTop = selectedRowOrColumnBorderColor;
+     
+        }
+        if (!header && initialRowIndex >= selectedRowIndex[0] && initialRowIndex <= selectedRowIndex[1]) {
+          styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
+
+          styleObj.borderTop = selectedRowOrColumnBorderColor;
+          styleObj.borderBottom = selectedRowOrColumnBorderColor;
+
+
+
+          if (columnIndex == 0) styleObj.borderLeft = selectedRowOrColumnBorderColor;
+          if (columnIndex == data[initialRowIndex].length - 1) styleObj.borderRight = selectedRowOrColumnBorderColor;
+        }
+        // if (rowIndex != 0 && columnIndex != 0) {
+        //   styleObj.cursor = "grab";
+        // }
+
+
+        return (<div key={columnIndex} style={styleObj}>
+          <div contentEditable={!header && editableCellIndex[0] == initialRowIndex && editableCellIndex[1] == columnIndex} onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)} style={{ width: "100%", height: `${(dataRowOptions[initialRowIndex]?.height || defaults.height) - 4}px`, overflow: "hidden", padding: "1px 2px" }}>{column}</div>
+
+          {(columnIndex == 0 && !header) && <div
+            draggable="true"
+            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 0, true)}
+            onDrag={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 1, true)}
+            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 2, true)}
+            // bottom-cell
+            style={{ cursor: "row-resize", height: "2px", width: "100%", position: "absolute", bottom: "-2px", left: 0, zIndex: 1, background: debug ? 'red' : undefined }}></div>}
+          {( header) && <div
+            draggable="true"
+            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 0, false)}
+            onDrag={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 1, false)}
+            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex,rowIndex, columnIndex, e, 2, false)}
+
+            // right-cell
+            style={{ cursor: "col-resize", height: "100%", width: "2px", position: "absolute", top: 0, right: "-2px", zIndex: 1, background: debug ? 'red' : undefined }}></div>}
+
+          {selected && <div style={{ height: "4px", width: "4px", position: "absolute", bottom: 0, right: 0, background: 'blue' }}>
+          </div>}
+        </div>)
+      })}
+
+    </div>
+  )
+}
 
 
 function Home(props: PropsI) {
-
-  const width = props.width || window.innerWidth;
-  const height = props.height || window.innerHeight;
-  const [data, setData] = useState([] as string[][]);
+  const headerData = props.headerData || []
+  const width = props.width;
+  const height = props.height;
+  const [paginatedBodyData, setPaginatedBodyData] = useState([] as string[][]);
   const onSelectedCellChange = props.onSelectedCellChange || function () { };
 
   const [gridTemplateRows, setGridTemplateRows] = useState("")
@@ -33,47 +152,42 @@ function Home(props: PropsI) {
   const [selectedColumnIndex, setSelectedColumnIndex] = useState([-1, -1])
 
 
-  const [dataPropertiesRow, setDataPropertiesRow] = useState([{
-    height: 24
-  }]);
-  const [dataPropertiesColumn, setDataPropertiesColumn] = useState([{
-    width: 48
-  }]);
-  const [ marginTopOffset, setMarginTopOffset] = useState(0);
-  const [ page, setPage] = useState(0);
+  const [dataRowOptions, setDataRowOptions] = useState({
+
+  } as {[key:string]:DataRowOption});
+  const [dataColOptions, setDataColOptions] = useState({
+
+  } as {[key:string]:DataColOption});
+  const [marginTopOffset, setMarginTopOffset] = useState(0);
 
 
 
   const paginationRef = useRef({
-    page: 0,
+    lowerPage: 0,
+    higherPage: 0,
     maxPage: 0,
     minPage: 0
   })
 
 
   function init() {
+  defaults.width =Math.max(defaults.width, Math.floor(width / props.initialData[0].length))
 
     let _gridTemplateColumns = "";
 
 
 
-
-    const _dataPropertiesColumn = [...dataPropertiesColumn]
-
-
     props.initialData[0].forEach((x, columnIndex) => {
-      if (props.initialData[0].length != _dataPropertiesColumn.length) _dataPropertiesColumn.push({ width: 100 })
-      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataPropertiesColumn[columnIndex].width}px`)
+
+      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${defaults.width}px`)
     })
 
-
     setGridTemplateColumns(_gridTemplateColumns)
-    setDataPropertiesColumn(_dataPropertiesColumn)
 
   }
   useEffect(() => {
     init()
-    onPageAction(true,false)
+    onPageAction(true)
 
 
   }, [])
@@ -90,8 +204,9 @@ function Home(props: PropsI) {
     end: 0
   })
 
-  const handleCellEdgeDrag = (rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => {
-    if (rowIndex != cellDragRef.current.rowIndex && columnIndex != cellDragRef.current.columnIndex && 0 != cellDragRef.current.rowIndex && 0 != cellDragRef.current.columnIndex) {
+  const handleCellEdgeDrag = (initialRowIndex:number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => {
+ 
+    if (initialRowIndex != cellDragRef.current.rowIndex && columnIndex != cellDragRef.current.columnIndex && 0 != cellDragRef.current.rowIndex && 0 != cellDragRef.current.columnIndex) {
 
       cellDragRef.current.rowIndex = 0;
       cellDragRef.current.columnIndex = 0;
@@ -101,45 +216,46 @@ function Home(props: PropsI) {
 
     if (action == 0) {
 
-      cellDragRef.current.rowIndex = rowIndex;
+      cellDragRef.current.rowIndex = initialRowIndex;
       cellDragRef.current.columnIndex = columnIndex;
 
       if (isHeight) cellDragRef.current.start = e.clientY; else cellDragRef.current.start = e.clientX;
-      cellDragRef.current.initHeight = dataPropertiesRow[rowIndex].height;
-      cellDragRef.current.initWidth = dataPropertiesColumn[columnIndex].width;
-
+      cellDragRef.current.initHeight = dataRowOptions[initialRowIndex]?.height || defaults.height;
+      cellDragRef.current.initWidth = dataColOptions[columnIndex]?.width || defaults.width;
 
       var img = new Image();
       img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
       e.dataTransfer.setDragImage(img, 0, 0);
 
 
-    } else if (action == 2 || action == 1) {
+    } else if ( action == 1 || action == 2) {
       if (isHeight) cellDragRef.current.end = e.clientY; else cellDragRef.current.end = e.clientX;
 
       if (isHeight) {
-        const _dataPropertiesRow = [...dataPropertiesRow]
-        _dataPropertiesRow[rowIndex].height = cellDragRef.current.initHeight + (cellDragRef.current.end - cellDragRef.current.start);
-        setDataPropertiesRow(_dataPropertiesRow);
+        const _dataRowOptions = {...dataRowOptions}
+      
+        if(!_dataRowOptions[initialRowIndex]) _dataRowOptions[initialRowIndex] = {} as any
+        _dataRowOptions[initialRowIndex].height = cellDragRef.current.initHeight + (cellDragRef.current.end - cellDragRef.current.start);
+        setDataRowOptions(_dataRowOptions);
 
         let _gridTemplateRows = ""
-        data.forEach((x, rowIndex) => {
-          if (data.length != _dataPropertiesRow.length) _dataPropertiesRow.push({ height: 24 })
-
-          _gridTemplateRows += (`${rowIndex == 0 ? "" : " "}${(_dataPropertiesRow[rowIndex]).height}px`)
+        paginatedBodyData.forEach((x, rowIndex) => {
+     
+          // @ts-ignore
+          _gridTemplateRows += (`${x[0] == 1 ? "" : " "}${_dataRowOptions[x[0]]?.height || defaults.height}px`)
         })
 
         setGridTemplateRows(_gridTemplateRows)
       } else {
 
-        const _dataPropertiesColumn = [...dataPropertiesColumn]
-        _dataPropertiesColumn[columnIndex].width = cellDragRef.current.initWidth + (cellDragRef.current.end - cellDragRef.current.start);
-        setDataPropertiesColumn(_dataPropertiesColumn);
+        const _dataColOptions = {...dataColOptions}
+        if(!_dataColOptions[columnIndex]) _dataColOptions[columnIndex] = {} as any
+        _dataColOptions[columnIndex].width = cellDragRef.current.initWidth + (cellDragRef.current.end - cellDragRef.current.start);
+        setDataColOptions(_dataColOptions);
 
         let _gridTemplateColumns = "";
-        data[0].forEach((x, columnIndex) => {
-          if (data[0].length != _dataPropertiesColumn.length) _dataPropertiesColumn.push({ width: 100 })
-          _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataPropertiesColumn[columnIndex].width}px`)
+        paginatedBodyData[0].forEach((x, columnIndex) => {
+          _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaults.width}px`)
         })
 
         setGridTemplateColumns(_gridTemplateColumns)
@@ -152,10 +268,11 @@ function Home(props: PropsI) {
   }
 
 
-  const onCellClick = (rowIndex: number, columnIndex: number, e: any) => {
-    if (rowIndex == 0 && columnIndex == 0) return;
+  const onCellClick = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => {
+  
+    if (isHeader && columnIndex == 0) return;
     setEditableCellIndex([-1, -1])
-    if (rowIndex == 0) {
+    if (isHeader) {
 
       setSelectedColumnIndex([columnIndex, columnIndex])
       setSelectedRowIndex([-1, -1])
@@ -163,240 +280,194 @@ function Home(props: PropsI) {
       return;
     }
     if (columnIndex == 0) {
-      setSelectedRowIndex([rowIndex, rowIndex])
+      setSelectedRowIndex([initialRowIndex, initialRowIndex])
       setSelectedColumnIndex([-1, -1])
       setSelectedCell([-1, -1])
       return;
     }
 
-    if (rowIndex == selectedCell[0] && columnIndex == selectedCell[1]) {// doubleclick
+    if (initialRowIndex == selectedCell[0] && columnIndex == selectedCell[1]) {// doubleclick
 
-      setEditableCellIndex([rowIndex, columnIndex])
+      setEditableCellIndex([initialRowIndex, columnIndex])
 
       return
     }
-    setSelectedCell([rowIndex, columnIndex])
+    setSelectedCell([initialRowIndex, columnIndex])
     setSelectedRowIndex([-1, -1])
     setSelectedColumnIndex([-1, -1])
 
     // lunch selected  cell event
-    onSelectedCellChange([rowIndex, columnIndex])
+    onSelectedCellChange([initialRowIndex, columnIndex])
 
   }
   const parentScrollRef = useRef({ pos: 0, detect: true, lastAction: "" })
   const parentRef = useRef(null as unknown as HTMLDivElement)
-  const topBoundRef = useRef(null as unknown as HTMLDivElement)
-  const bottomBoundRef = useRef(null as unknown as HTMLDivElement)
+  const headerRef = useRef(null as unknown as HTMLDivElement)
+  const mainElRef = useRef(null as unknown as HTMLDivElement)
   function onParentScroll() {
+    headerRef.current.scrollLeft = parentRef.current.scrollLeft;
+    if (!parentScrollRef.current.detect) return;
+    const [isTopInView, isBottomInView] = isEdgesInParentView(mainElRef.current, parentRef.current);
 
-    console.log("isbottom",isInViewport(bottomBoundRef.current))
+    if (isBottomInView == isTopInView) return
 
+    console.log("isTop", isTopInView)
+    console.log("isbottom", isBottomInView)
 
-    //@ts-ignore
-    const parentElement: HTMLDivElement = parentRef.current
-    if (!parentScrollRef.current.detect) {
-      console.log('cant detect')
-      parentScrollRef.current.pos = parentElement.scrollTop;
-      return;
-    }
-
-
-    if (parentElement.offsetHeight + parentElement.scrollTop >= parentElement.scrollHeight && paginationRef.current.page < paginationRef.current.maxPage) {
+    if (isBottomInView && paginationRef.current.higherPage < paginationRef.current.maxPage) {
       parentScrollRef.current.detect = false;
- 
-      paginationRef.current.page++
+
+
+      if (paginationRef.current.higherPage != 0) paginationRef.current.lowerPage = paginationRef.current.higherPage
+      paginationRef.current.higherPage++
       console.log("scroll up")
-      onPageAction(true,parentScrollRef.current.lastAction == "down")
+      onPageAction(true)
       parentScrollRef.current.lastAction = "up";
-    } else if (parentElement.scrollTop < parentScrollRef.current.pos && parentElement.scrollTop <= ((paginationRef.current.page - 1) * props.viewableHeight) && paginationRef.current.page > 0) {
+    } else if (isTopInView && paginationRef.current.lowerPage > 0) {
       parentScrollRef.current.detect = false;
- 
-      paginationRef.current.page--;
+
+      paginationRef.current.lowerPage--;
+      paginationRef.current.higherPage = paginationRef.current.lowerPage + 1
       console.log("scroll down")
-      onPageAction(false,parentScrollRef.current.lastAction == "up")
-      parentScrollRef.current.lastAction = "down";
+      onPageAction(false)
+
     }
 
-    setPage(paginationRef.current.page)
+
+    console.log({ lower: paginationRef.current.lowerPage, higher: paginationRef.current.higherPage })
 
 
 
-
-
-    parentScrollRef.current.pos = parentElement.scrollTop;
 
 
   }
   const dataRef = useRef([] as string[][]);
 
-  function onPageAction(up: boolean, switched:boolean) {
+  function onPageAction(up: boolean) {
     let tempData = dataRef.current;
-    const viewableCount = Math.ceil(props.viewableHeight / 24);
+    const viewableCount = Math.ceil(height / 24);
 
+  //   console.log(getCalculatedRowWithPagination(rowIndex, paginationRef.current.higherPage, viewableCount))
 
     paginationRef.current.maxPage = Math.ceil(props.initialData.length / viewableCount)
 
-    let paginatedData = props.initialData.slice((paginationRef.current.page + (switched ? up ? 1 : -1 : 0)) * viewableCount, ((paginationRef.current.page + (switched ? up ? 1 : -1 : 0)) * viewableCount) + viewableCount)
+    let paginatedData: string[][];
 
-    console.log(paginationRef.current.page)
     if (up) {
-      if (paginationRef.current.page > 1) {
+      paginatedData = props.initialData.slice((paginationRef.current.higherPage) * viewableCount, ((paginationRef.current.higherPage) * viewableCount) + viewableCount);
+      if (paginationRef.current.higherPage > 1) {
         tempData = tempData.slice(viewableCount, viewableCount * 2)
-        setMarginTopOffset((paginationRef.current.page - 1) * props.viewableHeight )
+        setMarginTopOffset((paginationRef.current.higherPage - 1) * height)
 
 
       }
       paginatedData = [...tempData, ...paginatedData]
     } else {
-
-      if (paginationRef.current.page > 1) {
-        tempData = tempData.slice(0, viewableCount )
-        setMarginTopOffset((paginationRef.current.page - 1) * props.viewableHeight )
+      paginatedData = props.initialData.slice((paginationRef.current.lowerPage) * viewableCount, ((paginationRef.current.lowerPage) * viewableCount) + viewableCount);
 
 
-      }
 
-      paginatedData = [...paginatedData,...tempData]
+      tempData = tempData.slice(0, viewableCount)
+      setMarginTopOffset((paginationRef.current.lowerPage) * height)
+
+
+
+      paginatedData = [...paginatedData, ...tempData]
     }
-    const _dataPropertiesRow = [...dataPropertiesRow]
+    const _dataRowOptions = {...dataRowOptions}
 
 
     let _gridTemplateRows = ""
-    paginatedData.forEach((x, rowIndex) => {
-      if (paginatedData.length != _dataPropertiesRow.length) _dataPropertiesRow.push({ height: 24 })
+    paginatedData.forEach((x) => {
 
-      _gridTemplateRows += (`${rowIndex == 0 ? "" : " "}${(_dataPropertiesRow[rowIndex]).height}px`)
+// @ts-ignore
+      _gridTemplateRows += (`${x[0] == 0 ? "" : " "}${_dataRowOptions[x[0]]?.height || defaults.height}px`)
     })
     setGridTemplateRows(_gridTemplateRows)
-    setDataPropertiesRow(_dataPropertiesRow)
+    setDataRowOptions(_dataRowOptions)
 
 
 
 
 
-    setData(paginatedData)
+    setPaginatedBodyData(paginatedData)
     dataRef.current = paginatedData;
+
 
     setTimeout(() => {
       parentScrollRef.current.detect = true;
-    }, 100);
+    }, 10);
 
   }
 
-  function isInViewport(element:HTMLDivElement) {
-    const rect = element.getBoundingClientRect();
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || parentRef.current.clientHeight) &&
-        rect.right <= (window.innerWidth || parentRef.current.clientWidth)
-    );
-  }
-  
 
 
 
 
-  return (
-    <div className="Home" ref={parentRef} onScroll={(onParentScroll)} style={{  overflow: "auto",width, height }}>
-      {debug && <div style={{backgroundColor:'red', padding: 1, position:'fixed', top:0, right:0, zIndex:5, color:'white' }}>
+
+
+  return (<>
+  <div ref={headerRef} className='HeaderDiv' style={{width: `calc(${width}px - 10px)`, marginLeft: '0',  overflow:'hidden'}}>
+
+  {debug && <div style={{ backgroundColor: 'red', padding: 1, position: 'fixed', top: 0, right: 0, zIndex: 5, color: 'white' }}>
         <small>marginTopOffset: {marginTopOffset} </small>
         <br />
-        <small>page: {page} </small>
-        </div>}
-        <div ref={topBoundRef} className='top-bound'></div>
-    <div style={{ display: 'grid', gridTemplateRows: gridTemplateRows,  border: borderColorAtEdges, marginTop: marginTopOffset}}>
 
-      {data.map((row, rowIndex) => {
+      </div>}
 
-        return (<div key={rowIndex} className={rowIndex == 0 ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
-
-          {row.map((column, columnIndex) => {
-            const selected = rowIndex == selectedCell[0] && columnIndex == selectedCell[1];
-            const styleObj: any = {
-
-              width: "100%",
-              position: "relative",
-              backgroundColor: "white"
-
-            };
-
-            if (selected) {
-              styleObj.border = "2px solid " + selectedCellColor;
-
-            } else {
-              styleObj.borderRight = columnIndex == data[rowIndex].length - 1 ? borderColorAtEdges : borderColorAtMiddle;
-              styleObj.borderLeft = columnIndex == 0 ? borderColorAtEdges : borderColorAtMiddle;
-              styleObj.borderTop = rowIndex == 0 ? borderColorAtEdges : borderColorAtMiddle;
-              styleObj.borderBottom = rowIndex == data.length - 1 ? borderColorAtEdges : borderColorAtMiddle;
+    {headerData.map((row, rowIndex) => {
 
 
-            }
-            if (columnIndex == 0) {
-              styleObj.backgroundColor = firstColumnBackground;
-            }
-            if (rowIndex == 0) {
-              styleObj.backgroundColor = firstRowBackground;
-            }
-            if (columnIndex >= selectedColumnIndex[0] && columnIndex <= selectedColumnIndex[1]) {
-              styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
+      return (<DrawColumn 
+        header={true} 
+        rowIndex={rowIndex} 
+        initialRowIndex={0} 
+        row={row} 
+        key={rowIndex} 
+        data={headerData} 
+        selectedCell={selectedCell}
+        gridTemplateColumns={gridTemplateColumns}
+        selectedColumnIndex={selectedColumnIndex}
+        onCellClick = {onCellClick}
+        handleCellEdgeDrag = {handleCellEdgeDrag}
+        editableCellIndex = {editableCellIndex}
+        selectedRowIndex={selectedRowIndex}
+        dataRowOptions ={dataRowOptions}
+         />)
+    })}
+    </div>
+    <div className="Home" ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
 
-              styleObj.borderLeft = selectedRowOrColumnBorderColor;
-              styleObj.borderRight = selectedRowOrColumnBorderColor;
 
-              if (rowIndex == 0) styleObj.borderTop = selectedRowOrColumnBorderColor;
-              if (rowIndex == data.length - 1) styleObj.borderBottom = selectedRowOrColumnBorderColor;
+      <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows,  marginTop: marginTopOffset }}>
 
-            }
-            if (rowIndex >= selectedRowIndex[0] && rowIndex <= selectedRowIndex[1]) {
-              styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
+        {paginatedBodyData.map((row, rowIndex) => {
+      const initialRowIndex = row[0];
 
-              styleObj.borderTop = selectedRowOrColumnBorderColor;
-              styleObj.borderBottom = selectedRowOrColumnBorderColor;
+          return (<DrawColumn
+            header={false}
+            rowIndex={rowIndex} 
+            initialRowIndex={initialRowIndex as any} 
+            row={row} 
+            key={initialRowIndex} 
+            data={paginatedBodyData} 
+            selectedCell={selectedCell}
+            gridTemplateColumns={gridTemplateColumns}
+            selectedColumnIndex={selectedColumnIndex}
+            onCellClick = {onCellClick}
+            handleCellEdgeDrag = {handleCellEdgeDrag}
+            editableCellIndex = {editableCellIndex}
+            selectedRowIndex={selectedRowIndex}
+            dataRowOptions ={dataRowOptions}
+            />)
+        })}
 
 
 
-              if (columnIndex == 0) styleObj.borderLeft = selectedRowOrColumnBorderColor;
-              if (columnIndex == data[rowIndex].length - 1) styleObj.borderRight = selectedRowOrColumnBorderColor;
-            }
-            // if (rowIndex != 0 && columnIndex != 0) {
-            //   styleObj.cursor = "grab";
-            // }
-
-
-            return (<div key={columnIndex} style={styleObj}>
-              <div contentEditable={editableCellIndex[0] == rowIndex && editableCellIndex[1] == columnIndex} onClick={(e) => onCellClick(rowIndex, columnIndex, e)} style={{ width: "100%", height: `${dataPropertiesRow[rowIndex]?.height - 4}px`, overflowY: "hidden", padding: "1px" }}>{column}</div>
-
-              {(columnIndex == 0 && rowIndex > 0) && <div
-                draggable="true"
-                onDragStart={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 0, true)}
-                onDrag={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 1, true)}
-                onDragEnd={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 2, true)}
-                // bottom-cell
-                style={{ cursor: "row-resize", height: "2px", width: "100%", position: "absolute", bottom: "-2px", left: 0, zIndex: 1, background: debug ? 'red' : undefined }}></div>}
-              {(columnIndex > 0 && rowIndex == 0) && <div
-                draggable="true"
-                onDragStart={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 0, false)}
-                onDrag={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 1, false)}
-                onDragEnd={(e) => handleCellEdgeDrag(rowIndex, columnIndex, e, 2, false)}
-
-                // right-cell
-                style={{ cursor: "col-resize", height: "100%", width: "2px", position: "absolute", top: 0, right: "-2px", zIndex: 1, background: debug ? 'red' : undefined }}></div>}
-
-              {selected && <div style={{ height: "4px", width: "4px", position: "absolute", bottom: 0, right: 0, background: 'blue' }}>
-              </div>}
-            </div>)
-          })}
-
-        </div>)
-      })}
-
-
+      </div>
 
     </div>
-    <div ref={bottomBoundRef} className='bottom-bound'></div>
-    </div>
-  );
+  </>);
 }
 
 export default Home;

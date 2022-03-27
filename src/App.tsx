@@ -2,18 +2,26 @@ import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.scss';
 import Home from './components/Home/Home';
+import dataTransformer from './components/Home/utils/dataTransformer';
+let initialData = require("./sample.json");
+ dataTransformer(initialData)
+
+
+const headerData = require("./header.json");
+
 
 function App() {
-  const height = 120;
+  const height = window.innerHeight - 24;
+  const width = window.innerWidth;
 
-  const initialData = require("./sample.json");
+
   return (
    <Home
-   initialData = {initialData}
+   initialData = {(initialData)}
+   headerData = {headerData}
 
-   width={"600px"}
-   height={height+"px"}
-   viewableHeight={height}
+  width={width }
+  height={height}
    onSelectedCellChange = {(val: any) => {
 
     // console.log(val)
