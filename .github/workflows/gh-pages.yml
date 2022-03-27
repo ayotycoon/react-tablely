@@ -15,7 +15,6 @@ jobs:
         node-version: '16'
     - run: npm install
     - run: CI= npm run build
-    - run: npm ci
 
 
     - name: Init new repo in dist folder and commit generated files
