@@ -1,0 +1,62 @@
+$thumb: rgba(188, 188, 188, 1);
+$bg: white;
+
+.Sheet {
+    * {
+        -webkit-touch-callout: none; /* iOS Safari */
+        -webkit-user-select: none; /* Safari */
+        -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently  supported by Chrome, Edge, Opera and Firefox */
+
+        position: relative;
+
+        box-sizing: border-box;
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: $thumb $bg;
+    }
+
+    /* Targtes on Chrome, Edge, and Safari */
+    *::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    *::-webkit-scrollbar-track {
+        background: $bg;
+    }
+
+    *::-webkit-scrollbar-thumb {
+        background-color: $thumb;
+        border-radius: 20px;
+        border: 3px solid $bg;
+    }
+
+    .ContextMenu {
+        background-color: white;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        position: fixed;
+        z-index: 5;
+        color: black;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        width: 200px;
+
+        .ContextMenuOption {
+            height: 24;
+            padding: 7px 5px;
+            border-radius: 0.25rem;
+            display:grid;
+            grid-template-columns: 20px auto;
+            &:hover{
+                background-color: #4786d8;
+                cursor: pointer;
+            }
+        }
+    }
+}

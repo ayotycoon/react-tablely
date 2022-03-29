@@ -1,138 +1,61 @@
 import React, { useEffect, useRef, useState } from 'react';
 import logo from './logo.svg';
-import './Home.scss';
+import './Sheet.scss';
 import { PropsI } from '../../interfaces/PropsI.interface';
 import { DataColOption, DataRowOption } from '../../interfaces/DataOptionI.interface';
+import isEdgesInParentView from '../../utils/isEdgesInParentView';
+import Settings from '../../Settings';
+import DrawColumn from '../DrawColumn/DrawColumn';
+import Worker from '../../workers/worker';
+import WorkerBuilder from '../../workers/workerBuilder';
 
-const debug = true;
-const selectedCellColor = "#1A73E8"
-const selectedRowOrColumnBackgroundColor = "rgba(231, 239, 253, 1)"
-const selectedRowOrColumnBorderColor = "1px solid rgba(30, 109, 232, 1)"
-const firstColumnBackground = "rgba(248, 249, 250, 1)"
-const firstRowBackground = "rgba(232, 234, 237, 1)"
+var myWorker = new WorkerBuilder(Worker);
+const allOptions = [
+  {
+    text: "Copy",
+    fa: "fa fa-copy",
+    fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+      return true;
+    }
+  },
+  {
+    text: "Insert above",
+    fa: "fa fa-arrow-up",
+       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+         if(selectedCellIndex[0] != -1 || selectedRowIndex[0] == -1 ) return false;
+         return true;
+       }
+  },
+  {
+    text: "Insert below",
+    fa: "fa fa-arrow-down",
+       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+        if(selectedCellIndex[0] != -1 || selectedRowIndex[0] == -1 ) return false;
+         return true;
+       }
+  },
+  {
+    text: "Insert left",
+    fa: "fa fa-arrow-left",
+       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+        if(selectedCellIndex[0] != -1 || selectedColIndex[0] == -1 ) return false;
+         return true;
+       }
+  },
+  {
+    text: "Insert right",
+    fa: "fa fa-arrow-right",
+       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+        if(selectedCellIndex[0] != -1 || selectedColIndex[0] == -1 ) return false;
+         return true;
+       }
+  },
+]
 
-const borderColorAtEdges = "1px solid rgba(188,188,188, 1)";
-const borderColorAtMiddle = "1px solid rgba(188,188,188, 0.5)";
+myWorker.postMessage("ho");
 
-const defaults = {
-  height: 24,
-  width: 60
-}
-
-function isEdgesInParentView(element: HTMLDivElement, parentElement: HTMLDivElement) {
-  const rect = element.getBoundingClientRect();
-
-  const offset = parentElement.getBoundingClientRect().top;
-
-  const res = [(rect.top - offset) >= 0, (rect.bottom - offset) <= parentElement.clientHeight];
-  return res
-}
-
-
-
-
-function DrawColumn({ rowIndex, initialRowIndex, row, header, data, selectedCell, gridTemplateColumns, selectedColumnIndex, onCellClick, handleCellContextMenu, handleCellEdgeDrag, editableCellIndex, selectedRowIndex, dataRowOptions }: {
-  rowIndex: number;
-  initialRowIndex: number;
-  row: string[];
-  header: boolean;
-  data: string[][];
-  selectedCell: number[];
-  gridTemplateColumns: string;
-  selectedColumnIndex: number[];
-  onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
-  handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
-  handleCellEdgeDrag: (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
-  editableCellIndex: number[];
-  selectedRowIndex: number[];
-  dataRowOptions: { [id: string]: DataRowOption }
-}) {
-  return (
-    <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
-
-      {row.map((column, columnIndex) => {
-        const selected = !header && initialRowIndex == selectedCell[0] && columnIndex == selectedCell[1];
-        const styleObj: any = {
-
-          width: "100%",
-          position: "relative",
-          backgroundColor: "white"
-
-        };
-
-        if (selected) {
-          styleObj.border = "1px solid " + selectedCellColor;
-
-        } else {
-          // styleObj.borderRight = columnIndex == data[rowIndex].length - 1 ? borderColorAtEdges : borderColorAtMiddle;
-          styleObj.borderLeft = borderColorAtMiddle;
-          //  if(!header && initialRowIndex != 0)styleObj.borderTop = initialRowIndex == 0 ? borderColorAtEdges : borderColorAtMiddle;
-          styleObj.borderBottom = borderColorAtMiddle;
-          if (header) styleObj.borderTop = borderColorAtMiddle;
-
-
-        }
-        if (columnIndex == 0) {
-          styleObj.backgroundColor = firstColumnBackground;
-        }
-        if (header && rowIndex == 0) {
-          styleObj.backgroundColor = firstRowBackground;
-        }
-        if (columnIndex >= selectedColumnIndex[0] && columnIndex <= selectedColumnIndex[1]) {
-          styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
-
-          styleObj.borderLeft = selectedRowOrColumnBorderColor;
-          styleObj.borderRight = selectedRowOrColumnBorderColor;
-
-          if (rowIndex == 0 && header) styleObj.borderTop = selectedRowOrColumnBorderColor;
-
-        }
-        if (!header && initialRowIndex >= selectedRowIndex[0] && initialRowIndex <= selectedRowIndex[1]) {
-          styleObj.backgroundColor = selectedRowOrColumnBackgroundColor;
-
-          styleObj.borderTop = selectedRowOrColumnBorderColor;
-          styleObj.borderBottom = selectedRowOrColumnBorderColor;
-
-
-
-          if (columnIndex == 0) styleObj.borderLeft = selectedRowOrColumnBorderColor;
-          if (columnIndex == data[initialRowIndex].length - 1) styleObj.borderRight = selectedRowOrColumnBorderColor;
-        }
-        // if (rowIndex != 0 && columnIndex != 0) {
-        //   styleObj.cursor = "grab";
-        // }
-
-
-        return (<div key={columnIndex} style={styleObj}>
-          <div onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)} contentEditable={!header && editableCellIndex[0] == initialRowIndex && editableCellIndex[1] == columnIndex} onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)} style={{ width: "100%", height: `${(dataRowOptions[initialRowIndex]?.height || defaults.height) - 4}px`, overflow: "hidden", padding: "1px 2px" }}>{column}</div>
-
-          {(columnIndex == 0 && !header) && <div
-            draggable="true"
-            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 0, true)}
-            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 1, true)}
-            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 2, true)}
-            // bottom-cell
-            style={{ cursor: "row-resize", height: "2px", width: "100%", position: "absolute", bottom: "-2px", left: 0, zIndex: 1, background: debug ? 'red' : undefined }}></div>}
-          {(header) && <div
-            draggable="true"
-            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 0, false)}
-            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 1, false)}
-            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 2, false)}
-
-            // right-cell
-            style={{ cursor: "col-resize", height: "100%", width: "2px", position: "absolute", top: 0, right: "-2px", zIndex: 1, background: debug ? 'red' : undefined }}></div>}
-
-          {selected && <div style={{ height: "4px", width: "4px", position: "absolute", bottom: 0, right: 0, background: 'blue' }}>
-          </div>}
-        </div>)
-      })}
-
-    </div>
-  )
-}
-
-
-function Home(props: PropsI) {
+let defaultWidth = Settings.defaultWidth;
+function Sheet(props: PropsI) {
   const headerData = props.headerData || []
   const width = props.width;
   const height = props.height;
@@ -145,17 +68,17 @@ function Home(props: PropsI) {
 
   const [editableCellIndex, setEditableCellIndex] = useState([-1, -1])
 
-  const [selectedCell, setSelectedCell] = useState([-1, -1])
+  const [selectedCellIndex, setSelectedCellIndex] = useState([-1, -1])
   const [selectedRowIndex, setSelectedRowIndex] = useState([-1, -1])
-  const [selectedColumnIndex, setSelectedColumnIndex] = useState([-1, -1])
+  const [selectedColIndex, setSelectedColIndex] = useState([-1, -1])
   const [contextMenuPosition, setContextMenuPosition] = useState(null as any as number[])
 
 
   const [dataRowOptions, setDataRowOptions] = useState({} as { [key: string]: DataRowOption });
-  const [dataColOptions, setDataColOptions] = useState({} as { [key: string]: DataColOption });
+  const [dataColOptions, setDataColOptions] = useState(props.dataColOptions || {} as { [key: string]: DataColOption });
   const [marginTopOffset, setMarginTopOffset] = useState(0);
 
-
+  const [stateCount, setStateCount] = useState(0);
 
   const paginationRef = useRef({
     lowerPage: 0,
@@ -163,32 +86,6 @@ function Home(props: PropsI) {
     maxPage: 0,
     minPage: 0
   })
-
-
-  function init() {
-    defaults.width = Math.max(defaults.width, Math.floor(width / props.initialData[0].length)) - 0.5;
-
-    let _gridTemplateColumns = "";
-
-
-
-    props.initialData[0].forEach((x, columnIndex) => {
-
-      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${defaults.width}px`)
-    })
-
-    setGridTemplateColumns(_gridTemplateColumns)
-
-  }
-  useEffect(() => {
-    tablelyRef.current.addEventListener('contextmenu', event => event.preventDefault());
-    init()
-    onPageAction(true)
-
-
-  }, [])
-
-
 
 
   const cellDragRef = useRef({
@@ -199,6 +96,83 @@ function Home(props: PropsI) {
     start: 0,
     end: 0
   })
+  const parentScrollRef = useRef({ pos: 0, detect: true, lastScrollPosition: "" });
+  const dataRef = useRef([] as string[][]);
+  const tablelyRef = useRef(null as unknown as HTMLDivElement);
+  const parentRef = useRef(null as unknown as HTMLDivElement);
+  const headerRef = useRef(null as unknown as HTMLDivElement);
+  const mainElRef = useRef(null as unknown as HTMLDivElement);
+
+
+  function init() {
+    defaultWidth = Math.max(Settings.defaultWidth, Math.floor(width / props.initialData[0].length)) - 1;
+
+    let _gridTemplateColumns = "";
+
+
+
+    props.initialData[0].forEach((x, columnIndex) => {
+
+      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${defaultWidth}px`)
+    })
+
+    setGridTemplateColumns(_gridTemplateColumns);
+    onPageAction(true)
+
+  }
+  useEffect(() => {
+    tablelyRef.current.addEventListener('contextmenu', event => event.preventDefault());
+
+
+    if (props.sheetRef) {
+      props.sheetRef.current = {};
+      props.sheetRef.current.resetState = resetState
+    }
+
+  }, [])
+
+
+  function resetState() {
+
+    setPaginatedBodyData(Settings.defaultSheetState.paginatedBodyData)
+    setGridTemplateRows(Settings.defaultSheetState.gridTemplateRows)
+    setGridTemplateColumns(Settings.defaultSheetState.gridTemplateColumns)
+    setEditableCellIndex(Settings.defaultSheetState.editableCellIndex)
+    setSelectedCellIndex(Settings.defaultSheetState.selectedCell)
+    setSelectedRowIndex(Settings.defaultSheetState.selectedRowIndex)
+    setSelectedColIndex(Settings.defaultSheetState.selectedColIndex)
+    setContextMenuPosition(null as any as number[])
+    setDataColOptions(props.dataColOptions || {} as { [key: string]: DataColOption });
+    setMarginTopOffset(0);
+
+    paginationRef.current = {
+      lowerPage: 0,
+      higherPage: 0,
+      maxPage: 0,
+      minPage: 0
+    }
+
+    cellDragRef.current = {
+      rowIndex: 0,
+      columnIndex: 0,
+      initHeight: 0,
+      initWidth: 0,
+      start: 0,
+      end: 0
+    }
+    parentScrollRef.current = { pos: 0, detect: true, lastScrollPosition: "" };
+    dataRef.current = []
+    Settings.stateCount++;
+    setStateCount(Settings.stateCount)
+  }
+
+
+  useEffect(() => {
+
+    init()
+  }, [stateCount])
+
+
 
   const handleCellEdgeDrag = (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => {
 
@@ -216,8 +190,8 @@ function Home(props: PropsI) {
       cellDragRef.current.columnIndex = columnIndex;
 
       if (isHeight) cellDragRef.current.start = e.clientY; else cellDragRef.current.start = e.clientX;
-      cellDragRef.current.initHeight = dataRowOptions[initialRowIndex]?.height || defaults.height;
-      cellDragRef.current.initWidth = dataColOptions[columnIndex]?.width || defaults.width;
+      cellDragRef.current.initHeight = dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight;
+      cellDragRef.current.initWidth = dataColOptions[columnIndex]?.width || defaultWidth;
 
       var img = new Image();
       img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
@@ -238,7 +212,7 @@ function Home(props: PropsI) {
         paginatedBodyData.forEach((x, rowIndex) => {
 
           // @ts-ignore
-          _gridTemplateRows += (`${x[0] == 1 ? "" : " "}${_dataRowOptions[x[0]]?.height || defaults.height}px`)
+          _gridTemplateRows += (`${x[0] == 1 ? "" : " "}${_dataRowOptions[x[0]]?.height || Settings.defaultHeight}px`)
         })
 
         setGridTemplateRows(_gridTemplateRows)
@@ -251,7 +225,7 @@ function Home(props: PropsI) {
 
         let _gridTemplateColumns = "";
         paginatedBodyData[0].forEach((x, columnIndex) => {
-          _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaults.width}px`)
+          _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaultWidth}px`)
         })
 
         setGridTemplateColumns(_gridTemplateColumns)
@@ -277,53 +251,45 @@ function Home(props: PropsI) {
     setEditableCellIndex([-1, -1])
     if (isHeader) {
 
-      setSelectedColumnIndex([columnIndex, columnIndex])
+      setSelectedColIndex([columnIndex, columnIndex])
       setSelectedRowIndex([-1, -1])
-      setSelectedCell([-1, -1])
-      if(!fromContext)setContextMenuPosition(null as any)
+      setSelectedCellIndex([-1, -1])
+      if (!fromContext) setContextMenuPosition(null as any)
       return;
     }
     if (columnIndex == 0) {
       setSelectedRowIndex([initialRowIndex, initialRowIndex])
-      setSelectedColumnIndex([-1, -1])
-      setSelectedCell([-1, -1])
-      if(!fromContext)setContextMenuPosition(null as any)
+      setSelectedColIndex([-1, -1])
+      setSelectedCellIndex([-1, -1])
+      if (!fromContext) setContextMenuPosition(null as any)
       return;
     }
 
-    if (!fromContext && initialRowIndex == selectedCell[0] && columnIndex == selectedCell[1]) {// doubleclick
+    if (!fromContext && initialRowIndex == selectedCellIndex[0] && columnIndex == selectedCellIndex[1]) {// doubleclick
 
       setEditableCellIndex([initialRowIndex, columnIndex])
 
       return
     }
-    setSelectedCell([initialRowIndex, columnIndex])
+    setSelectedCellIndex([initialRowIndex, columnIndex])
     setSelectedRowIndex([-1, -1])
-    setSelectedColumnIndex([-1, -1])
+    setSelectedColIndex([-1, -1])
 
     // lunch selected  cell event
     onSelectedCellChange([initialRowIndex, columnIndex])
-    if(!fromContext)setContextMenuPosition(null as any)
+    if (!fromContext) setContextMenuPosition(null as any)
 
   }
-  const parentScrollRef = useRef({ pos: 0, detect: true, lastScrollPosition: "" });
-  const tablelyRef = useRef(null as unknown as HTMLDivElement);
-  const parentRef = useRef(null as unknown as HTMLDivElement);
-  const headerRef = useRef(null as unknown as HTMLDivElement);
-  const mainElRef = useRef(null as unknown as HTMLDivElement);
+
 
 
   function onParentScroll() {
     headerRef.current.scrollLeft = parentRef.current.scrollLeft;
-    if(contextMenuPosition)setContextMenuPosition(null as any)
+    if (contextMenuPosition) setContextMenuPosition(null as any)
     if (!parentScrollRef.current.detect) return;
     const [isTopInView, isBottomInView] = isEdgesInParentView(mainElRef.current, parentRef.current);
 
     if (isBottomInView == isTopInView) return
-
-    console.log("isTop", isTopInView)
-    console.log("isbottom", isBottomInView)
-
     if (isBottomInView && paginationRef.current.higherPage < paginationRef.current.maxPage) {
       parentScrollRef.current.detect = false;
 
@@ -351,7 +317,7 @@ function Home(props: PropsI) {
 
 
   }
-  const dataRef = useRef([] as string[][]);
+
 
   function onPageAction(up: boolean) {
     let tempData = dataRef.current;
@@ -391,7 +357,7 @@ function Home(props: PropsI) {
     paginatedData.forEach((x) => {
 
       // @ts-ignore
-      _gridTemplateRows += (`${x[0] == 0 ? "" : " "}${_dataRowOptions[x[0]]?.height || defaults.height}px`)
+      _gridTemplateRows += (`${x[0] == 0 ? "" : " "}${_dataRowOptions[x[0]]?.height || Settings.defaultHeight}px`)
     })
     setGridTemplateRows(_gridTemplateRows)
     setDataRowOptions(_dataRowOptions)
@@ -416,15 +382,19 @@ function Home(props: PropsI) {
 
 
 
-  return (<div ref={tablelyRef}>
+  return (<div className="Sheet" ref={tablelyRef}>
 
-    {contextMenuPosition && <div style={{ backgroundColor: 'purple', padding: 5, position: 'fixed', top: contextMenuPosition[0], left: contextMenuPosition[1], zIndex: 5, color: 'white', width: 200, height: 200 }}>
+    {contextMenuPosition && <div className='ContextMenu' style={{  top: contextMenuPosition[0], left: contextMenuPosition[1], }}>
+      {allOptions.map((option, i) => option.fn(selectedRowIndex, selectedColIndex, selectedCellIndex, props.initialData.length) ? <div className='ContextMenuOption' key={option.text} style={{  }}>
+        <div><i className={option.fa}></i></div>
+        <div>{option.text}</div>
 
+      </div>: <span key={option.text}></span>)}
     </div>}
 
     <div ref={headerRef} className='HeaderDiv' style={{ width: `calc(${width}px - 10px)`, marginLeft: '0', overflow: 'hidden' }}>
 
-      {debug && <div style={{ backgroundColor: 'red', padding: 2, position: 'fixed', top: 0, right: 0, zIndex: 5, color: 'white' }}>
+      {Settings.debug && <div style={{ backgroundColor: 'red', padding: 2, position: 'fixed', top: 0, right: 0, zIndex: 5, color: 'white' }}>
         <small>Margin Top Offset: {marginTopOffset} </small>
         <br />
         <small>Rendered length: {paginatedBodyData.length} </small>
@@ -450,19 +420,20 @@ function Home(props: PropsI) {
           row={row}
           key={rowIndex}
           data={headerData}
-          selectedCell={selectedCell}
+          selectedCellIndex={selectedCellIndex}
           gridTemplateColumns={gridTemplateColumns}
-          selectedColumnIndex={selectedColumnIndex}
+          selectedColIndex={selectedColIndex}
           onCellClick={onCellClick}
           handleCellContextMenu={handleCellContextMenu}
           handleCellEdgeDrag={handleCellEdgeDrag}
           editableCellIndex={editableCellIndex}
           selectedRowIndex={selectedRowIndex}
           dataRowOptions={dataRowOptions}
+          dataColOptions={dataColOptions}
         />)
       })}
     </div>
-    <div className="Home" ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
+    <div ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
 
 
       <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows, marginTop: marginTopOffset }}>
@@ -477,15 +448,16 @@ function Home(props: PropsI) {
             row={row}
             key={initialRowIndex}
             data={paginatedBodyData}
-            selectedCell={selectedCell}
+            selectedCellIndex={selectedCellIndex}
             gridTemplateColumns={gridTemplateColumns}
-            selectedColumnIndex={selectedColumnIndex}
+            selectedColIndex={selectedColIndex}
             onCellClick={onCellClick}
             handleCellContextMenu={handleCellContextMenu}
             handleCellEdgeDrag={handleCellEdgeDrag}
             editableCellIndex={editableCellIndex}
             selectedRowIndex={selectedRowIndex}
             dataRowOptions={dataRowOptions}
+            dataColOptions={dataColOptions}
           />)
         })}
 
@@ -497,4 +469,4 @@ function Home(props: PropsI) {
   </div>);
 }
 
-export default Home;
+export default Sheet;

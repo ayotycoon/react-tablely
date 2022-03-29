@@ -4,5 +4,7 @@ export interface DataRowOption {
   }
 export interface DataColOption {
 
-  width: number
+  width?: number,
+  backgroundColor?: string,
+  color?: string,
   }
