@@ -1,5 +1,5 @@
-export default (data:(string| number)[][]) => {
-    data.forEach((row, i) => {
-row[0] = i+1;
+export default (data:any) => {
+    data.forEach((row: any, i: number) => {
+row.id = i+1;
     })
 }

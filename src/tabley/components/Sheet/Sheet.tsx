@@ -9,6 +9,7 @@ import DrawColumn from '../DrawColumn/DrawColumn';
 import Worker from '../../workers/worker';
 import WorkerBuilder from '../../workers/workerBuilder';
 import copyTextToClipboard from '../../utils/copy';
+import { BodyI } from '../../interfaces/InputI.interface';
 
 enum OptionKey {
   Copy,
@@ -73,7 +74,7 @@ function Sheet(props: PropsI) {
   const headerData = props.headerData || []
   const width = props.width;
   const height = props.height;
-  const [paginatedBodyData, setPaginatedBodyData] = useState([] as string[][]);
+  const [paginatedBodyData, setPaginatedBodyData] = useState([] as BodyI[]);
   const onSelectedCellChange = props.onSelectedCellChange || function () { };
 
   const [gridTemplateRows, setGridTemplateRows] = useState("")
@@ -110,7 +111,7 @@ function Sheet(props: PropsI) {
     end: 0
   })
   const parentScrollRef = useRef({ pos: 0, detect: true, lastScrollPosition: "" });
-  const dataRef = useRef([] as string[][]);
+  const dataRef = useRef([] as BodyI[]);
   const tablelyRef = useRef(null as unknown as HTMLDivElement);
   const parentRef = useRef(null as unknown as HTMLDivElement);
   const headerRef = useRef(null as unknown as HTMLDivElement);
@@ -118,13 +119,13 @@ function Sheet(props: PropsI) {
 
 
   function init() {
-    defaultWidth = Math.max(Settings.defaultWidth, Math.floor(width / props.initialData[0].length)) - 1;
+    defaultWidth = Math.max(Settings.defaultWidth, Math.floor(width / props.headerData.length)) - 1;
 
     let _gridTemplateColumns = "";
 
 
 
-    props.initialData[0].forEach((x, columnIndex) => {
+    props.headerData.forEach((x, columnIndex) => {
 
       _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${defaultWidth}px`)
     })
@@ -235,7 +236,7 @@ function Sheet(props: PropsI) {
         setDataColOptions(_dataColOptions);
 
         let _gridTemplateColumns = "";
-        paginatedBodyData[0].forEach((x, columnIndex) => {
+        props.headerData.forEach((x, columnIndex) => {
           _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaultWidth}px`)
         })
 
@@ -273,7 +274,7 @@ function Sheet(props: PropsI) {
       return;
     }
 
-    if (!fromContext && initialRowIndex == selectedCellIndex[1][0] && columnIndex == selectedCellIndex[1][1]) {// doubleclick
+    if (!fromContext && initialRowIndex == selectedCellIndex[0][0] && columnIndex == selectedCellIndex[1][0]) {// doubleclick
 
       setEditableCellIndex([initialRowIndex, columnIndex])
 
@@ -328,13 +329,13 @@ function Sheet(props: PropsI) {
 
   function onPageAction(up: boolean) {
     let tempData = dataRef.current;
-    const viewableCount = Math.ceil(height / 24);
+    const viewableCount = Math.ceil(height / Settings.defaultHeight);
 
     //   console.log(getCalculatedRowWithPagination(rowIndex, paginationRef.current.higherPage, viewableCount))
 
     paginationRef.current.maxPage = Math.ceil(props.initialData.length / viewableCount)
 
-    let paginatedData: string[][];
+    let paginatedData: BodyI[];
 
     if (up) {
       paginatedData = props.initialData.slice((paginationRef.current.higherPage) * viewableCount, ((paginationRef.current.higherPage) * viewableCount) + viewableCount);
@@ -358,6 +359,7 @@ function Sheet(props: PropsI) {
       paginatedData = [...paginatedData, ...tempData]
     }
     const _dataRowOptions = { ...dataRowOptions }
+
 
 
     let _gridTemplateRows = ""
@@ -443,16 +445,14 @@ function Sheet(props: PropsI) {
         <small>Higher Page: {paginationRef.current.higherPage} </small>
       </div>}
 
-      {headerData.map((row, rowIndex) => {
+ 
 
 
-        return (<DrawColumn
-          header={true}
-          rowIndex={rowIndex}
-          initialRowIndex={0}
-          row={row}
-          key={rowIndex}
-          data={headerData}
+     <DrawColumn
+       
+
+paginatedBodyData={null as unknown as BodyI[]}
+          headerData={headerData}
           selectedCellIndex={selectedCellIndex}
           gridTemplateColumns={gridTemplateColumns}
           onCellClick={onCellClick}
@@ -461,24 +461,18 @@ function Sheet(props: PropsI) {
           editableCellIndex={editableCellIndex}
           dataRowOptions={dataRowOptions}
           dataColOptions={dataColOptions}
-        />)
-      })}
+        />
     </div>
     <div ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
 
 
       <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows, marginTop: marginTopOffset }}>
 
-        {paginatedBodyData.map((row, rowIndex) => {
-          const initialRowIndex = row[0];
-
-          return (<DrawColumn
-            header={false}
-            rowIndex={rowIndex}
-            initialRowIndex={initialRowIndex as any}
-            row={row}
-            key={initialRowIndex}
-            data={paginatedBodyData}
+<DrawColumn
+       
+            headerData={headerData}
+     
+            paginatedBodyData={paginatedBodyData}
             selectedCellIndex={selectedCellIndex}
             gridTemplateColumns={gridTemplateColumns}
             onCellClick={onCellClick}
@@ -487,8 +481,7 @@ function Sheet(props: PropsI) {
             editableCellIndex={editableCellIndex}
             dataRowOptions={dataRowOptions}
             dataColOptions={dataColOptions}
-          />)
-        })}
+          />
 
 
 

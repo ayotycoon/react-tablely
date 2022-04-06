@@ -1,4 +1,5 @@
 import { DataColOption, DataRowOption } from "./interfaces/DataOptionI.interface";
+import { BodyI } from "./interfaces/InputI.interface";
 
 export default {
     selectedCellColor: "#1A73E8",
@@ -10,7 +11,7 @@ export default {
     borderColorAtEdges: "1px solid rgba(188,188,188, 1)",
     borderColorAtMiddle: "1px solid rgba(188,188,188, 0.5)",
 
-    defaultHeight: 24,
+    defaultHeight: 20,
     defaultWidth: 60,
     defaultColColor: "white",
     debug: false,
@@ -19,7 +20,7 @@ export default {
 
     stateCount:0,
     defaultSheetState: {
-        paginatedBodyData: [] as string[][],
+        paginatedBodyData: [] as BodyI[],
         gridTemplateRows: "",
         gridTemplateColumns: "",
         editableCellIndex: [-1, -1],

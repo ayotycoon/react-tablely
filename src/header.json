@@ -1,6 +1,51 @@
 [
+    {
+        "key": "id",
+        "title": "S/N"
+    },
 
-    [
-        "S/N","Period","Data_value","STATUS","UNITS","Subject","Group","Series_title_1","Series_title_2","Series_title_3","Series_title_4","Series_title_5"
-    ]
+    {
+        "key": 0,
+        "title": "Period"
+    },
+    {
+        "key": 1,
+        "title": "Data_value"
+    },
+    {
+        "key": 2,
+        "title": "STATUS"
+    },
+    {
+        "key": 3,
+        "title": "UNITS"
+    },
+    {
+        "key": 4,
+        "title": "Subject"
+    },
+    {
+        "key": 5,
+        "title": "Group"
+    },
+    {
+        "key": 6,
+        "title": "Series_title_1"
+    },
+    {
+        "key": 7,
+        "title": "Series_title_2"
+    },
+    {
+        "key": 8,
+        "title": "Series_title_3"
+    },
+    {
+        "key": 9,
+        "title": "Series_title_4"
+    },
+    {
+        "key": 10,
+        "title": "Series_title_5"
+    }
 ]

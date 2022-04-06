@@ -1,9 +1,10 @@
 import React from "react"
 import { DataColOption } from "./DataOptionI.interface"
+import { BodyI, HeaderI } from "./InputI.interface"
 
 export interface PropsI {
-    initialData: string[][],
-    headerData?: string[][],
+    initialData: BodyI[],
+    headerData: HeaderI[],
     width: number,
     height: number
     onSelectedCellChange?: (value: any) => void
