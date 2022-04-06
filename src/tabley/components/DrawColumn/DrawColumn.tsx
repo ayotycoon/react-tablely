@@ -2,20 +2,19 @@ import react from "react";
 import { DataColOption, DataRowOption } from "../../interfaces/DataOptionI.interface";
 import Settings from "../../Settings";
 
-export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellIndex, gridTemplateColumns, selectedColIndex, onCellClick, handleCellContextMenu, handleCellEdgeDrag, editableCellIndex, selectedRowIndex, dataRowOptions, dataColOptions }: {
+export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellIndex, gridTemplateColumns, onCellClick, handleCellContextMenu, handleCellEdgeDrag, editableCellIndex, dataRowOptions, dataColOptions }: {
     rowIndex: number;
     initialRowIndex: number;
     row: string[];
     header: boolean;
     data: string[][];
-    selectedCellIndex: number[];
+    selectedCellIndex: number[][];
     gridTemplateColumns: string;
-    selectedColIndex: number[];
     onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellEdgeDrag: (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
     editableCellIndex: number[];
-    selectedRowIndex: number[];
+
     dataRowOptions: { [id: string]: DataRowOption }
     dataColOptions: { [id: string]: DataColOption }
 }) => {
@@ -23,7 +22,11 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
         <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
 
             {row.map((column, columnIndex) => {
-                const selected = !header && initialRowIndex == selectedCellIndex[0] && columnIndex == selectedCellIndex[1];
+                const selected = !header &&
+                selectedCellIndex[0][0] == selectedCellIndex[0][1] &&
+                selectedCellIndex[1][0] == selectedCellIndex[1][1] &&
+                initialRowIndex == selectedCellIndex[0][0] &&
+                columnIndex == selectedCellIndex[1][0];
                 const styleObj: react.CSSProperties = {
 
                     width: "100%",
@@ -34,6 +37,8 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
 
                 if (selected) {
                     styleObj.border = "1px solid " + Settings.selectedCellColor;
+       
+                   
 
                 } else {
                     // styleObj.borderRight = columnIndex == data[rowIndex].length - 1 ? borderColorAtEdges : borderColorAtMiddle;
@@ -51,7 +56,12 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
                 if (header && rowIndex == 0) {
                     styleObj.backgroundColor = Settings.firstRowBackground;
                 }
-                if (columnIndex >= selectedColIndex[0] && columnIndex <= selectedColIndex[1]) {
+                // analysing column
+                if (columnIndex >= selectedCellIndex[1][0] && 
+                    columnIndex <= selectedCellIndex[1][1] &&
+                    (selectedCellIndex[0][0] == -1 || selectedCellIndex[0][0] !=  selectedCellIndex[0][1] )
+                    
+                    ) {
                     styleObj.backgroundColor = Settings.selectedRowOrColumnBackgroundColor;
 
                     styleObj.borderLeft = Settings.selectedRowOrColumnBorderColor;
@@ -60,7 +70,13 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
                     if (rowIndex == 0 && header) styleObj.borderTop = Settings.selectedRowOrColumnBorderColor;
 
                 }
-                if (!header && initialRowIndex >= selectedRowIndex[0] && initialRowIndex <= selectedRowIndex[1]) {
+                // Analysing row
+                if (!header &&
+                    initialRowIndex >= selectedCellIndex[0][0]&&
+                    initialRowIndex <= selectedCellIndex[0][1] &&
+                    (selectedCellIndex[1][0] == -1 || selectedCellIndex[1][0] != selectedCellIndex[1][1])
+                    
+                    ) {
                     styleObj.backgroundColor = Settings.selectedRowOrColumnBackgroundColor;
 
                     styleObj.borderTop = Settings.selectedRowOrColumnBorderColor;
@@ -69,7 +85,8 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
 
 
                     if (columnIndex == 0) styleObj.borderLeft = Settings.selectedRowOrColumnBorderColor;
-                    if (columnIndex == data[initialRowIndex].length - 1) styleObj.borderRight = Settings.selectedRowOrColumnBorderColor;
+                    // console.log({columnIndex,initialRowIndex,data})
+                    if (columnIndex == data[initialRowIndex-1].length - 1) styleObj.borderRight = Settings.selectedRowOrColumnBorderColor;
                 }
 
 
@@ -82,7 +99,11 @@ export default ({ rowIndex, initialRowIndex, row, header, data, selectedCellInde
 
 
                 return (<div key={columnIndex} style={styleObj}>
-                    <div onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)} contentEditable={!header && editableCellIndex[0] == initialRowIndex && editableCellIndex[1] == columnIndex} onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)} style={{ width: "100%", height: `${(dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight) - 4}px`, overflow: "hidden", padding: "1px 2px" }}>{column}</div>
+                    <div 
+                    onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)} 
+                    contentEditable={!header && editableCellIndex[0] == initialRowIndex && editableCellIndex[1] == columnIndex} 
+                    onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)} 
+                    style={{ width: "100%", height: `${(dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight) - 4}px`, overflow: "hidden", padding: "1px 2px" }}>{column}</div>
 
                     {(columnIndex == 0 && !header) && <div
                         draggable="true"

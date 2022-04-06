@@ -23,9 +23,8 @@ export default {
         gridTemplateRows: "",
         gridTemplateColumns: "",
         editableCellIndex: [-1, -1],
-        selectedCell: [-1, -1],
-        selectedRowIndex: [-1, -1],
-        selectedColIndex: [-1, -1],
+        selectedCell: [[-1, -1],[-1, -1]],
+
         contextMenuPosition: null as any as number[],
         dataRowOptions: {} as { [key: string]: DataRowOption },
         dataColOptions: {} as { [key: string]: DataColOption },

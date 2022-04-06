@@ -8,47 +8,61 @@ import Settings from '../../Settings';
 import DrawColumn from '../DrawColumn/DrawColumn';
 import Worker from '../../workers/worker';
 import WorkerBuilder from '../../workers/workerBuilder';
+import copyTextToClipboard from '../../utils/copy';
+
+enum OptionKey {
+  Copy,
+  InsertAbove,
+  InsertBelow,
+  InsertLeft,
+  InsertRight,
+}
 
 var myWorker = new WorkerBuilder(Worker);
 const allOptions = [
   {
     text: "Copy",
     fa: "fa fa-copy",
-    fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
+    key: OptionKey.Copy,
+    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
       return true;
     }
   },
   {
     text: "Insert above",
     fa: "fa fa-arrow-up",
-       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
-         if(selectedCellIndex[0] != -1 || selectedRowIndex[0] == -1 ) return false;
-         return true;
-       }
+    key: OptionKey.InsertAbove,
+    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[0][0] == -1) return false;
+      return true;
+    }
   },
   {
     text: "Insert below",
     fa: "fa fa-arrow-down",
-       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
-        if(selectedCellIndex[0] != -1 || selectedRowIndex[0] == -1 ) return false;
-         return true;
-       }
+    key: OptionKey.InsertBelow,
+    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[0][0] == -1) return false;
+      return true;
+    }
   },
   {
     text: "Insert left",
     fa: "fa fa-arrow-left",
-       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
-        if(selectedCellIndex[0] != -1 || selectedColIndex[0] == -1 ) return false;
-         return true;
-       }
+    key: OptionKey.InsertLeft,
+    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[1][0] == -1) return false;
+      return true;
+    }
   },
   {
     text: "Insert right",
     fa: "fa fa-arrow-right",
-       fn: (selectedRowIndex: number[], selectedColIndex: number[], selectedCellIndex: number[], maxInitialRowsIndex: number) => {
-        if(selectedCellIndex[0] != -1 || selectedColIndex[0] == -1 ) return false;
-         return true;
-       }
+    key: OptionKey.InsertRight,
+    fn: (selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[1][0] == -1) return false;
+      return true;
+    }
   },
 ]
 
@@ -68,9 +82,8 @@ function Sheet(props: PropsI) {
 
   const [editableCellIndex, setEditableCellIndex] = useState([-1, -1])
 
-  const [selectedCellIndex, setSelectedCellIndex] = useState([-1, -1])
-  const [selectedRowIndex, setSelectedRowIndex] = useState([-1, -1])
-  const [selectedColIndex, setSelectedColIndex] = useState([-1, -1])
+  const [selectedCellIndex, setSelectedCellIndex] = useState([[-1, -1],[-1, -1]])
+
   const [contextMenuPosition, setContextMenuPosition] = useState(null as any as number[])
 
 
@@ -139,8 +152,6 @@ function Sheet(props: PropsI) {
     setGridTemplateColumns(Settings.defaultSheetState.gridTemplateColumns)
     setEditableCellIndex(Settings.defaultSheetState.editableCellIndex)
     setSelectedCellIndex(Settings.defaultSheetState.selectedCell)
-    setSelectedRowIndex(Settings.defaultSheetState.selectedRowIndex)
-    setSelectedColIndex(Settings.defaultSheetState.selectedColIndex)
     setContextMenuPosition(null as any as number[])
     setDataColOptions(props.dataColOptions || {} as { [key: string]: DataColOption });
     setMarginTopOffset(0);
@@ -251,29 +262,25 @@ function Sheet(props: PropsI) {
     setEditableCellIndex([-1, -1])
     if (isHeader) {
 
-      setSelectedColIndex([columnIndex, columnIndex])
-      setSelectedRowIndex([-1, -1])
-      setSelectedCellIndex([-1, -1])
+      setSelectedCellIndex([[-1,-1],[columnIndex, columnIndex]])
       if (!fromContext) setContextMenuPosition(null as any)
       return;
     }
     if (columnIndex == 0) {
-      setSelectedRowIndex([initialRowIndex, initialRowIndex])
-      setSelectedColIndex([-1, -1])
-      setSelectedCellIndex([-1, -1])
+      setSelectedCellIndex([[initialRowIndex, initialRowIndex],[-1, -1]])
+
       if (!fromContext) setContextMenuPosition(null as any)
       return;
     }
 
-    if (!fromContext && initialRowIndex == selectedCellIndex[0] && columnIndex == selectedCellIndex[1]) {// doubleclick
+    if (!fromContext && initialRowIndex == selectedCellIndex[1][0] && columnIndex == selectedCellIndex[1][1]) {// doubleclick
 
       setEditableCellIndex([initialRowIndex, columnIndex])
 
       return
     }
-    setSelectedCellIndex([initialRowIndex, columnIndex])
-    setSelectedRowIndex([-1, -1])
-    setSelectedColIndex([-1, -1])
+    setSelectedCellIndex([[initialRowIndex,initialRowIndex], [columnIndex,columnIndex]])
+
 
     // lunch selected  cell event
     onSelectedCellChange([initialRowIndex, columnIndex])
@@ -376,7 +383,33 @@ function Sheet(props: PropsI) {
 
   }
 
+  function onContextMenuItemClick(key: OptionKey) {
+    setContextMenuPosition(null as any)
 
+    switch (key) {
+      case OptionKey.Copy:
+        
+        let dataToCopy: any = "";
+        // Jest cell
+        if (selectedCellIndex[0][0] != -1  && selectedCellIndex[1][0] != -1) {
+          dataToCopy = props.initialData[selectedCellIndex[0][0]][selectedCellIndex[1][0]] || "";
+
+        } else if (selectedCellIndex[0][0] != -1  && selectedCellIndex[1][0] == -1) { // analyse row
+         dataToCopy = JSON.stringify(props.initialData[selectedCellIndex[0][0] -1]);
+
+        } else if (selectedCellIndex[0][0] == -1  && selectedCellIndex[1][0] != -1) { // analyse column
+   
+        }
+
+        copyTextToClipboard(dataToCopy);
+        
+        
+        break;
+
+      default:
+        break;
+    }
+  }
 
 
 
@@ -384,12 +417,12 @@ function Sheet(props: PropsI) {
 
   return (<div className="Sheet" ref={tablelyRef}>
 
-    {contextMenuPosition && <div className='ContextMenu' style={{  top: contextMenuPosition[0], left: contextMenuPosition[1], }}>
-      {allOptions.map((option, i) => option.fn(selectedRowIndex, selectedColIndex, selectedCellIndex, props.initialData.length) ? <div className='ContextMenuOption' key={option.text} style={{  }}>
+    {contextMenuPosition && <div className='ContextMenu' style={{ top: contextMenuPosition[0], left: contextMenuPosition[1], }}>
+      {allOptions.map((option, i) => option.fn(selectedCellIndex, props.initialData.length) ? <div onClick={() => onContextMenuItemClick(option.key)} className='ContextMenuOption' key={option.text} style={{}}>
         <div><i className={option.fa}></i></div>
         <div>{option.text}</div>
 
-      </div>: <span key={option.text}></span>)}
+      </div> : <span key={option.text}></span>)}
     </div>}
 
     <div ref={headerRef} className='HeaderDiv' style={{ width: `calc(${width}px - 10px)`, marginLeft: '0', overflow: 'hidden' }}>
@@ -422,12 +455,10 @@ function Sheet(props: PropsI) {
           data={headerData}
           selectedCellIndex={selectedCellIndex}
           gridTemplateColumns={gridTemplateColumns}
-          selectedColIndex={selectedColIndex}
           onCellClick={onCellClick}
           handleCellContextMenu={handleCellContextMenu}
           handleCellEdgeDrag={handleCellEdgeDrag}
           editableCellIndex={editableCellIndex}
-          selectedRowIndex={selectedRowIndex}
           dataRowOptions={dataRowOptions}
           dataColOptions={dataColOptions}
         />)
@@ -450,12 +481,10 @@ function Sheet(props: PropsI) {
             data={paginatedBodyData}
             selectedCellIndex={selectedCellIndex}
             gridTemplateColumns={gridTemplateColumns}
-            selectedColIndex={selectedColIndex}
             onCellClick={onCellClick}
             handleCellContextMenu={handleCellContextMenu}
             handleCellEdgeDrag={handleCellEdgeDrag}
             editableCellIndex={editableCellIndex}
-            selectedRowIndex={selectedRowIndex}
             dataRowOptions={dataRowOptions}
             dataColOptions={dataColOptions}
           />)
