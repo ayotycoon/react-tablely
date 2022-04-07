@@ -117,7 +117,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                     return (<div key={columnIndex} style={styleObj}>
                         <div
                             onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)}
-                            onTouchStart={Os.isMobileIos() ? (e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e): undefined}
+                          //  onTouchStart={Os.isMobileIos() ? (e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e): undefined}
                             onBlur={canEdit ? (e) => handleEditableOnBlur(e,editableCellIndex[0],renderedRowIndex,editableCellIndex[1]) : undefined}
                             contentEditable={canEdit}
                             onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)}
