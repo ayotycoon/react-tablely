@@ -1,7 +1,8 @@
 export const headerData = [
     {
         "key": "id",
-        "title": "S/N"
+        "title": "S/N",
+        width: 50
     },
 
     {

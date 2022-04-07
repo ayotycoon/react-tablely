@@ -86,7 +86,6 @@ export default function SheetsNavigator({ data }: {
                 headerDataRef={data[activeSheetIndex].headerDataRef}
                 width={data[activeSheetIndex].width}
                 height={data[activeSheetIndex].height}
-                dataColOptions={data[activeSheetIndex].dataColOptions}
 
             />
 

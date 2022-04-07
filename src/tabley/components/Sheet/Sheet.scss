@@ -2,6 +2,10 @@ $thumb: rgba(188, 188, 188, 1);
 $bg: white;
 
 .Sheet {
+    [contenteditable]{
+        -webkit-user-select: text;
+        user-select: text;
+    }
     * {
         -webkit-touch-callout: none; /* iOS Safari */
         -webkit-user-select: none; /* Safari */

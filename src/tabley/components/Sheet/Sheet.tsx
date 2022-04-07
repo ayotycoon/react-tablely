@@ -98,7 +98,7 @@ function Sheet(props: SheetPropsI) {
 
 
   const [dataRowOptions, setDataRowOptions] = useState({} as { [key: string]: DataRowOption });
-  const [dataColOptions, setDataColOptions] = useState(props.dataColOptions || {} as { [key: string]: DataColOption });
+  const [dataColOptions, setDataColOptions] = useState({} as { [key: string]: DataColOption });
   const [marginTopOffset, setMarginTopOffset] = useState(0);
 
   const [stateCount, setStateCount] = useState(0);
@@ -123,7 +123,7 @@ function Sheet(props: SheetPropsI) {
   const dataRef = useRef([] as BodyI[]);
   const tablelyRef = useRef(null as unknown as HTMLDivElement);
   const parentRef = useRef(null as unknown as HTMLDivElement);
-  const headerRef = useRef(null as unknown as HTMLDivElement);
+  const headerDivRef = useRef(null as unknown as HTMLDivElement);
   const mainElRef = useRef(null as unknown as HTMLDivElement);
 
 
@@ -132,19 +132,25 @@ function Sheet(props: SheetPropsI) {
 
     let _gridTemplateColumns = "";
 
-
+    const _dataColOptions: {[index: string]:DataColOption} = {}
 
     props.headerDataRef.current.forEach((x, columnIndex) => {
+      if(x.width){
+        if(!_dataColOptions[columnIndex]) _dataColOptions[columnIndex] = {}
+        _dataColOptions[columnIndex].width = x.width
+      }
 
-      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${dataColOptions[columnIndex]?.width || defaultWidth}px`)
+      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaultWidth}px`)
     })
-
+    setDataColOptions(_dataColOptions);
     setGridTemplateColumns(_gridTemplateColumns);
     onPageAction(PageAction.UP)
 
   }
   useEffect(() => {
-
+   
+      tablelyRef.current.addEventListener('contextmenu', event => event.preventDefault());
+    
 
 
 
@@ -164,7 +170,7 @@ function Sheet(props: SheetPropsI) {
     setEditableCellIndex(Settings.defaultSheetState.editableCellIndex)
     setSelectedCellIndex(Settings.defaultSheetState.selectedCell)
     setContextMenuPosition(null as any as number[])
-    setDataColOptions(props.dataColOptions || {} as { [key: string]: DataColOption });
+    setDataColOptions( {} as { [key: string]: DataColOption });
     setMarginTopOffset(0);
 
     paginationRef.current = {
@@ -319,7 +325,7 @@ function Sheet(props: SheetPropsI) {
 
 
   function onParentScroll() {
-    headerRef.current.scrollLeft = parentRef.current.scrollLeft;
+    headerDivRef.current.scrollLeft = parentRef.current.scrollLeft;
     if (contextMenuPosition) setContextMenuPosition(null as any)
     if (!parentScrollRef.current.detect) return;
     const [isTopInView, isBottomInView] = isEdgesInParentView(mainElRef.current, parentRef.current);
@@ -416,6 +422,16 @@ function Sheet(props: SheetPropsI) {
 
   }
 
+  function handleEditableOnBlur(e: any, initialRowIndex: number, columnIndex: number) {
+ 
+    const key = props.headerDataRef.current[columnIndex].key;
+
+    props.initialDataRef.current[initialRowIndex-1][key] = e.target.innerText;
+
+
+   
+
+  }
   function onContextMenuItemClick(key: OptionKey) {
     setContextMenuPosition(null as any)
 
@@ -481,7 +497,7 @@ function Sheet(props: SheetPropsI) {
       </div> : <span key={option.text}></span>)}
     </div>}
 
-    <div ref={headerRef} className='HeaderDiv' style={{ width: `calc(${width}px - 10px)`, marginLeft: '0', overflow: 'hidden' }}>
+    <div ref={headerDivRef} className='HeaderDiv' style={{ width: `calc(${width}px - 10px)`, marginLeft: '0', overflow: 'hidden' }}>
 
       {Settings.debug && <div style={{ backgroundColor: 'red', padding: 2, position: 'fixed', top: 0, right: 0, zIndex: 5, color: 'white' }}>
         <small>Margin Top Offset: {marginTopOffset} </small>
@@ -504,7 +520,7 @@ function Sheet(props: SheetPropsI) {
 
       <DrawColumn
 
-
+handleEditableOnBlur={null as any}
         paginatedBodyData={null as unknown as BodyI[]}
         headerData={props.headerDataRef.current}
         selectedCellIndex={selectedCellIndex}
@@ -523,7 +539,7 @@ function Sheet(props: SheetPropsI) {
       <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows, marginTop: marginTopOffset }}>
 
         <DrawColumn
-
+handleEditableOnBlur={handleEditableOnBlur}
           headerData={props.headerDataRef.current}
 
           paginatedBodyData={paginatedBodyData}

@@ -8,7 +8,6 @@ export interface SheetPropsI {
     width: number,
     height: number
     onSelectedCellChange?: (value: any) => void
-    dataColOptions?:  { [key: string]: DataColOption }
     sheetRef?: React.MutableRefObject<any>
   
   }

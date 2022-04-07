@@ -4,6 +4,7 @@ import { DataColOption } from "./DataOptionI.interface"
 export interface HeaderI {
     title: string,
     key: string| number,
+    width?: number
 
   
   }

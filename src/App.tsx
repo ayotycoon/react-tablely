@@ -41,8 +41,8 @@ const headerDataRef = useRef(sample.headerData as HeaderI[]);
           initialDataRef,
           headerDataRef,
           width,
-          height,
-          dataColOptions:{"0":{width: 50}}
+          height
+        
         },
         // {
         //   initialDataRef: [[1, 2, 3, 4]] as any,
