@@ -144,7 +144,10 @@ function Sheet(props: SheetPropsI) {
 
   }
   useEffect(() => {
-    tablelyRef.current.addEventListener('contextmenu', event => event.preventDefault());
+    if(window.innerWidth> 800){
+      tablelyRef.current.addEventListener('contextmenu', event => event.preventDefault());
+    }
+
 
 
     if (props.sheetRef) {
