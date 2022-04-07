@@ -5,7 +5,7 @@ export default {
     selectedCellColor: "#1A73E8",
     selectedRowOrColumnBackgroundColor: "rgba(231, 239, 253, 1)",
     selectedRowOrColumnBorderColor: "1px solid rgba(30, 109, 232, 1)",
-    firstColumnBackground: "rgba(248, 249, 250, 1)",
+    firstColumnBackground: "rgba(232, 234, 237, 1)",
     firstRowBackground: "rgba(232, 234, 237, 1)",
 
     borderColorAtEdges: "1px solid rgba(188,188,188, 1)",
@@ -50,4 +50,5 @@ export default {
         },
         parentScrollRef: { pos: 0, detect: true, lastScrollPosition: "" }
     }
+
 }

@@ -26,7 +26,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
             {row.map((eachRow, rowIndex) => {
             return headerData.map((column, columnIndex) => {
                 // @ts-ignore
-                const cellData = header ? column.title : eachRow[column.key];
+                const cellData = header ? column.title : (eachRow[column.key] || "");
                 // @ts-ignore
                 const initialRowIndex: number = header ? 0 : eachRow.id;
 
@@ -39,7 +39,8 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 
                     width: "100%",
                     position: "relative",
-                    backgroundColor: "white"
+                    backgroundColor: "white",
+                    textAlign:"right"
 
                 };
 
@@ -60,9 +61,13 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 
                 if (columnIndex == 0) {
                     styleObj.backgroundColor = Settings.firstColumnBackground;
+                    styleObj.textAlign = "center";
+                    styleObj.fontWeight = "600";
                 }
                 if (header && rowIndex == 0) {
                     styleObj.backgroundColor = Settings.firstRowBackground;
+                    styleObj.textAlign = "center";
+                    styleObj.fontWeight = "600";
                 }
                 // analysing column
                 if (columnIndex >= selectedCellIndex[1][0] &&

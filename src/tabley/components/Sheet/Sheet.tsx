@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import logo from './logo.svg';
 import './Sheet.scss';
-import { PropsI } from '../../interfaces/PropsI.interface';
+import { SheetPropsI } from '../../interfaces/SheetPropsI.interface';
 import { DataColOption, DataRowOption } from '../../interfaces/DataOptionI.interface';
 import isEdgesInParentView from '../../utils/isEdgesInParentView';
 import Settings from '../../Settings';
@@ -10,14 +10,10 @@ import Worker from '../../workers/worker';
 import WorkerBuilder from '../../workers/workerBuilder';
 import copyTextToClipboard from '../../utils/copy';
 import { BodyI } from '../../interfaces/InputI.interface';
+import { OptionKey } from '../../interfaces/OptionKey.enum';
 
-enum OptionKey {
-  Copy,
-  InsertAbove,
-  InsertBelow,
-  InsertLeft,
-  InsertRight,
-}
+
+
 
 var myWorker = new WorkerBuilder(Worker);
 const allOptions = [
@@ -25,7 +21,7 @@ const allOptions = [
     text: "Copy",
     fa: "fa fa-copy",
     key: OptionKey.Copy,
-    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+    fn: (selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
       return true;
     }
   },
@@ -33,8 +29,8 @@ const allOptions = [
     text: "Insert above",
     fa: "fa fa-arrow-up",
     key: OptionKey.InsertAbove,
-    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
-      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[0][0] == -1) return false;
+    fn: (selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] == -1 || selectedCellIndex[1][0] != -1) return false;
       return true;
     }
   },
@@ -42,8 +38,8 @@ const allOptions = [
     text: "Insert below",
     fa: "fa fa-arrow-down",
     key: OptionKey.InsertBelow,
-    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
-      if (selectedCellIndex[0][0] != -1 || selectedCellIndex[0][0] == -1) return false;
+    fn: (selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+      if (selectedCellIndex[0][0] == -1 || selectedCellIndex[1][0] != -1) return false;
       return true;
     }
   },
@@ -51,7 +47,7 @@ const allOptions = [
     text: "Insert left",
     fa: "fa fa-arrow-left",
     key: OptionKey.InsertLeft,
-    fn: ( selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
+    fn: (selectedCellIndex: number[][], maxInitialRowsIndex: number) => {
       if (selectedCellIndex[0][0] != -1 || selectedCellIndex[1][0] == -1) return false;
       return true;
     }
@@ -67,11 +63,24 @@ const allOptions = [
   },
 ]
 
-myWorker.postMessage("ho");
+enum PageAction {
+  UP,
+  Down,
+  Refresh
+}
+
+enum CellAction {
+  NoAction,
+  ColumnSelected,
+  RowSelected,
+  DoubleClick,
+  SelectedCell
+
+}
 
 let defaultWidth = Settings.defaultWidth;
-function Sheet(props: PropsI) {
-  const headerData = props.headerData || []
+function Sheet(props: SheetPropsI) {
+
   const width = props.width;
   const height = props.height;
   const [paginatedBodyData, setPaginatedBodyData] = useState([] as BodyI[]);
@@ -83,7 +92,7 @@ function Sheet(props: PropsI) {
 
   const [editableCellIndex, setEditableCellIndex] = useState([-1, -1])
 
-  const [selectedCellIndex, setSelectedCellIndex] = useState([[-1, -1],[-1, -1]])
+  const [selectedCellIndex, setSelectedCellIndex] = useState([[-1, -1], [-1, -1]])
 
   const [contextMenuPosition, setContextMenuPosition] = useState(null as any as number[])
 
@@ -119,19 +128,19 @@ function Sheet(props: PropsI) {
 
 
   function init() {
-    defaultWidth = Math.max(Settings.defaultWidth, Math.floor(width / props.headerData.length)) - 1;
+    defaultWidth = Math.max(Settings.defaultWidth, Math.floor(width / props.headerDataRef.current.length)) - 1;
 
     let _gridTemplateColumns = "";
 
 
 
-    props.headerData.forEach((x, columnIndex) => {
+    props.headerDataRef.current.forEach((x, columnIndex) => {
 
-      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${defaultWidth}px`)
+      _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${dataColOptions[columnIndex]?.width || defaultWidth}px`)
     })
 
     setGridTemplateColumns(_gridTemplateColumns);
-    onPageAction(true)
+    onPageAction(PageAction.UP)
 
   }
   useEffect(() => {
@@ -236,7 +245,7 @@ function Sheet(props: PropsI) {
         setDataColOptions(_dataColOptions);
 
         let _gridTemplateColumns = "";
-        props.headerData.forEach((x, columnIndex) => {
+        props.headerDataRef.current.forEach((x, columnIndex) => {
           _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${_dataColOptions[columnIndex]?.width || defaultWidth}px`)
         })
 
@@ -251,41 +260,58 @@ function Sheet(props: PropsI) {
 
 
   const handleCellContextMenu = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    onCellClick(initialRowIndex, columnIndex, isHeader, e, true)
+    let approxContextMenuHeight = 110;
+    let approxContextMenuWidth = 200;
+    const res = onCellClick(initialRowIndex, columnIndex, isHeader, e, true);
+    if (!res) return;
+    if (res == CellAction.SelectedCell) approxContextMenuHeight = 48;
 
-    const y = e.clientY;
-    const x = e.clientX;
+      let y = e.clientY;
+    let x = e.clientX;
+
+    if (y + approxContextMenuHeight > height) {
+      y -= approxContextMenuHeight;
+    }
+
+    if (x + approxContextMenuWidth > width) {
+      x -= approxContextMenuWidth;
+    }
+
+
     setContextMenuPosition([y, x]);
   }
   const onCellClick = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: React.MouseEvent<HTMLDivElement, MouseEvent>, fromContext?: boolean) => {
 
-    if (isHeader && columnIndex == 0) return;
+    if (isHeader && columnIndex == 0) return CellAction.NoAction;
     setEditableCellIndex([-1, -1])
     if (isHeader) {
-
-      setSelectedCellIndex([[-1,-1],[columnIndex, columnIndex]])
+      // selecting column only
+      setSelectedCellIndex([[-1, -1], [columnIndex, columnIndex]])
       if (!fromContext) setContextMenuPosition(null as any)
-      return;
+      return CellAction.ColumnSelected;
     }
     if (columnIndex == 0) {
-      setSelectedCellIndex([[initialRowIndex, initialRowIndex],[-1, -1]])
+      // selecting row only
+      setSelectedCellIndex([[initialRowIndex, initialRowIndex], [-1, -1]])
 
       if (!fromContext) setContextMenuPosition(null as any)
-      return;
+      return CellAction.RowSelected;
     }
 
     if (!fromContext && initialRowIndex == selectedCellIndex[0][0] && columnIndex == selectedCellIndex[1][0]) {// doubleclick
-
+      // double click
       setEditableCellIndex([initialRowIndex, columnIndex])
 
-      return
+      return CellAction.DoubleClick
     }
-    setSelectedCellIndex([[initialRowIndex,initialRowIndex], [columnIndex,columnIndex]])
+    // selected cell
+    setSelectedCellIndex([[initialRowIndex, initialRowIndex], [columnIndex, columnIndex]])
 
 
     // lunch selected  cell event
     onSelectedCellChange([initialRowIndex, columnIndex])
     if (!fromContext) setContextMenuPosition(null as any)
+    return CellAction.SelectedCell;
 
   }
 
@@ -305,7 +331,7 @@ function Sheet(props: PropsI) {
       if (paginationRef.current.higherPage != 0) paginationRef.current.lowerPage = paginationRef.current.higherPage
       paginationRef.current.higherPage++
       console.log("scroll up")
-      onPageAction(true)
+      onPageAction(PageAction.UP)
       parentScrollRef.current.lastScrollPosition = "up";
     } else if (isTopInView && paginationRef.current.lowerPage > 0) {
       parentScrollRef.current.detect = false;
@@ -313,7 +339,7 @@ function Sheet(props: PropsI) {
       paginationRef.current.lowerPage--;
       paginationRef.current.higherPage = paginationRef.current.lowerPage + 1
       console.log("scroll down")
-      onPageAction(false)
+      onPageAction(PageAction.Down)
       parentScrollRef.current.lastScrollPosition = "down";
     }
 
@@ -327,27 +353,28 @@ function Sheet(props: PropsI) {
   }
 
 
-  function onPageAction(up: boolean) {
+  function onPageAction(direction: PageAction) {
     let tempData = dataRef.current;
     const viewableCount = Math.ceil(height / Settings.defaultHeight);
 
     //   console.log(getCalculatedRowWithPagination(rowIndex, paginationRef.current.higherPage, viewableCount))
 
-    paginationRef.current.maxPage = Math.ceil(props.initialData.length / viewableCount)
+    paginationRef.current.maxPage = Math.ceil(props.initialDataRef.current.length / viewableCount) - 1;
+    let paginatedData: BodyI[] = [];
 
-    let paginatedData: BodyI[];
-
-    if (up) {
-      paginatedData = props.initialData.slice((paginationRef.current.higherPage) * viewableCount, ((paginationRef.current.higherPage) * viewableCount) + viewableCount);
+    if (direction == PageAction.UP) {
+      paginatedData = props.initialDataRef.current.slice((paginationRef.current.higherPage) * viewableCount, ((paginationRef.current.higherPage) * viewableCount) + viewableCount);
+      //  console.log(paginationRef.current.higherPage,paginatedBodyData.length)
       if (paginationRef.current.higherPage > 1) {
+        // get last
         tempData = tempData.slice(viewableCount, viewableCount * 2)
         setMarginTopOffset((paginationRef.current.higherPage - 1) * height)
 
 
       }
       paginatedData = [...tempData, ...paginatedData]
-    } else {
-      paginatedData = props.initialData.slice((paginationRef.current.lowerPage) * viewableCount, ((paginationRef.current.lowerPage) * viewableCount) + viewableCount);
+    } else if (direction == PageAction.Down) {
+      paginatedData = props.initialDataRef.current.slice((paginationRef.current.lowerPage) * viewableCount, ((paginationRef.current.lowerPage) * viewableCount) + viewableCount);
 
 
 
@@ -357,10 +384,13 @@ function Sheet(props: PropsI) {
 
 
       paginatedData = [...paginatedData, ...tempData]
+    } else {
+      const upper = paginationRef.current.lowerPage == paginationRef.current.higherPage ? [] : props.initialDataRef.current.slice((paginationRef.current.lowerPage) * viewableCount, ((paginationRef.current.lowerPage) * viewableCount) + viewableCount);
+      const lower = props.initialDataRef.current.slice((paginationRef.current.higherPage) * viewableCount, ((paginationRef.current.higherPage) * viewableCount) + viewableCount);
+
+      paginatedData = upper.concat(lower);
     }
     const _dataRowOptions = { ...dataRowOptions }
-
-
 
     let _gridTemplateRows = ""
     paginatedData.forEach((x) => {
@@ -390,22 +420,45 @@ function Sheet(props: PropsI) {
 
     switch (key) {
       case OptionKey.Copy:
-        
+
         let dataToCopy: any = "";
         // Jest cell
-        if (selectedCellIndex[0][0] != -1  && selectedCellIndex[1][0] != -1) {
-          dataToCopy = props.initialData[selectedCellIndex[0][0]][selectedCellIndex[1][0]] || "";
+        if (selectedCellIndex[0][0] != -1 && selectedCellIndex[1][0] != -1) {
+          dataToCopy = props.initialDataRef.current[selectedCellIndex[0][0]][selectedCellIndex[1][0]] || "";
 
-        } else if (selectedCellIndex[0][0] != -1  && selectedCellIndex[1][0] == -1) { // analyse row
-         dataToCopy = JSON.stringify(props.initialData[selectedCellIndex[0][0] -1]);
+        } else if (selectedCellIndex[0][0] != -1 && selectedCellIndex[1][0] == -1) { // analyse row
+          dataToCopy = JSON.stringify(props.initialDataRef.current[selectedCellIndex[0][0] - 1]);
 
-        } else if (selectedCellIndex[0][0] == -1  && selectedCellIndex[1][0] != -1) { // analyse column
-   
+        } else if (selectedCellIndex[0][0] == -1 && selectedCellIndex[1][0] != -1) { // analyse column
+
         }
 
         copyTextToClipboard(dataToCopy);
-        
-        
+
+
+        break;
+
+      case OptionKey.InsertAbove:
+        myWorker.postMessage({ action: OptionKey.InsertAbove, initialData: props.initialDataRef.current, initialRowIndex: selectedCellIndex[0][0] });
+        myWorker.onmessage = (ev: MessageEvent<any>) => {
+          const initialData = ev.data;
+          props.initialDataRef.current = initialData;
+
+          onPageAction(PageAction.Refresh)
+        }
+
+
+        break;
+      case OptionKey.InsertBelow:
+        myWorker.postMessage({ action: OptionKey.InsertBelow, initialData: props.initialDataRef.current, initialRowIndex: selectedCellIndex[0][0] });
+        myWorker.onmessage = (ev: MessageEvent<any>) => {
+          const initialData = ev.data;
+          props.initialDataRef.current = initialData;
+
+          onPageAction(PageAction.Refresh)
+        }
+
+
         break;
 
       default:
@@ -420,7 +473,7 @@ function Sheet(props: PropsI) {
   return (<div className="Sheet" ref={tablelyRef}>
 
     {contextMenuPosition && <div className='ContextMenu' style={{ top: contextMenuPosition[0], left: contextMenuPosition[1], }}>
-      {allOptions.map((option, i) => option.fn(selectedCellIndex, props.initialData.length) ? <div onClick={() => onContextMenuItemClick(option.key)} className='ContextMenuOption' key={option.text} style={{}}>
+      {allOptions.map((option, i) => option.fn(selectedCellIndex, props.initialDataRef.current.length) ? <div onClick={() => onContextMenuItemClick(option.key)} className='ContextMenuOption' key={option.text} style={{}}>
         <div><i className={option.fa}></i></div>
         <div>{option.text}</div>
 
@@ -436,7 +489,7 @@ function Sheet(props: PropsI) {
         <br />
         {paginatedBodyData[paginatedBodyData.length - 1] && <small>Last Rendered Item: {paginatedBodyData[paginatedBodyData.length - 1][0]} </small>}
         <br />
-        <small>Total length: {props.initialData.length} </small>
+        <small>Total length: {props.initialDataRef.current.length} </small>
         <br />
         <small>Scroll Position: {parentScrollRef.current.lastScrollPosition} </small>
         <br />
@@ -445,14 +498,34 @@ function Sheet(props: PropsI) {
         <small>Higher Page: {paginationRef.current.higherPage} </small>
       </div>}
 
- 
 
 
-     <DrawColumn
-       
 
-paginatedBodyData={null as unknown as BodyI[]}
-          headerData={headerData}
+      <DrawColumn
+
+
+        paginatedBodyData={null as unknown as BodyI[]}
+        headerData={props.headerDataRef.current}
+        selectedCellIndex={selectedCellIndex}
+        gridTemplateColumns={gridTemplateColumns}
+        onCellClick={onCellClick}
+        handleCellContextMenu={handleCellContextMenu}
+        handleCellEdgeDrag={handleCellEdgeDrag}
+        editableCellIndex={editableCellIndex}
+        dataRowOptions={dataRowOptions}
+        dataColOptions={dataColOptions}
+      />
+    </div>
+    <div ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
+
+
+      <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows, marginTop: marginTopOffset }}>
+
+        <DrawColumn
+
+          headerData={props.headerDataRef.current}
+
+          paginatedBodyData={paginatedBodyData}
           selectedCellIndex={selectedCellIndex}
           gridTemplateColumns={gridTemplateColumns}
           onCellClick={onCellClick}
@@ -462,26 +535,6 @@ paginatedBodyData={null as unknown as BodyI[]}
           dataRowOptions={dataRowOptions}
           dataColOptions={dataColOptions}
         />
-    </div>
-    <div ref={parentRef} onScroll={(onParentScroll)} style={{ overflow: "auto", width, height }}>
-
-
-      <div ref={mainElRef} style={{ display: 'grid', gridTemplateRows: gridTemplateRows, marginTop: marginTopOffset }}>
-
-<DrawColumn
-       
-            headerData={headerData}
-     
-            paginatedBodyData={paginatedBodyData}
-            selectedCellIndex={selectedCellIndex}
-            gridTemplateColumns={gridTemplateColumns}
-            onCellClick={onCellClick}
-            handleCellContextMenu={handleCellContextMenu}
-            handleCellEdgeDrag={handleCellEdgeDrag}
-            editableCellIndex={editableCellIndex}
-            dataRowOptions={dataRowOptions}
-            dataColOptions={dataColOptions}
-          />
 
 
 

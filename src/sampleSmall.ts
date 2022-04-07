@@ -1,4 +1,57 @@
-[
+export const headerData = [
+    {
+        "key": "id",
+        "title": "S/N"
+    },
+
+    {
+        "key": 0,
+        "title": "Period"
+    },
+    {
+        "key": 1,
+        "title": "Data value"
+    },
+    {
+        "key": 2,
+        "title": "STATUS"
+    },
+    {
+        "key": 3,
+        "title": "UNITS"
+    },
+    {
+        "key": 4,
+        "title": "Subject"
+    },
+    {
+        "key": 5,
+        "title": "Group"
+    },
+    {
+        "key": 6,
+        "title": "Series title 1"
+    },
+    {
+        "key": 7,
+        "title": "Series title 2"
+    },
+    {
+        "key": 8,
+        "title": "Series title 3"
+    },
+    {
+        "key": 9,
+        "title": "Series title 4"
+    },
+    {
+        "key": 10,
+        "title": "Series title 5"
+    }
+]
+
+
+export const initialData = [
     {
         "0": "CEPQ.S2371",
         "1": "1996.12,h",

@@ -1,28 +1,32 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.scss';
 import Sheet from './tabley/components/Sheet/Sheet';
 import dataTransformer from './tabley/utils/dataTransformer';
 import SheetsNavigator from './tabley/components/SheetsNavigator/SheetsNavigator';
-import { BodyI } from './tabley/interfaces/InputI.interface';
-let initialData: BodyI[] = require("./sample-small.json");
-dataTransformer(initialData)
+import { BodyI, HeaderI } from './tabley/interfaces/InputI.interface';
+import * as sample from './sampleSmall'
 
-
-
-const headerData = require("./header.json");
 
 
 function App() {
   const height = window.innerHeight - 52;
   const width = window.innerWidth;
 
+  let initialDataRef = useRef(sample.initialData as unknown as BodyI[]);
+dataTransformer(initialDataRef.current)
+
+
+
+const headerDataRef = useRef(sample.headerData as HeaderI[]);
+
+
 
   return (
     <>
       {/* <Sheet
-      initialData={(initialData)}
-      headerData={headerData}
+      initialDataRef={(initialDataRef)}
+      headerDataRef={headerDataRef}
     //  dataColOptions={{4: {backgroundColor: "rgba(0, 128, 0, 0.534)"}}}
       width={width}
       height={height}
@@ -34,14 +38,15 @@ function App() {
     /> */}
       <SheetsNavigator data={[
         {
-          initialData,
-          headerData,
+          initialDataRef,
+          headerDataRef,
           width,
-          height
+          height,
+          dataColOptions:{"0":{width: 50}}
         },
         // {
-        //   initialData: [[1, 2, 3, 4]] as any,
-        //   headerData: [["S/N", "b", "ff", "uuu"]],
+        //   initialDataRef: [[1, 2, 3, 4]] as any,
+        //   headerDataRef: [["S/N", "b", "ff", "uuu"]],
         //   width,
         //   height
         // }
