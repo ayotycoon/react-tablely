@@ -1,3 +1,23 @@
+/*
+Asset puchase Date
+Asset name
+Description
+Puchase cost
+Estimate resale value
+Net cost
+Annual depreciation
+Transfer Date
+Transfer Value
+Disposal Date
+Asset Held for Sales Date
+impairment Date
+impairment Value
+Years after impairment
+Initial allowance
+Annual allowance
+Investment allowance
+No of years	No of Assets
+*/
 export const headerData = [
     {
         "key": "id",
@@ -7,47 +27,47 @@ export const headerData = [
 
     {
         "key": 0,
-        "title": "Period"
+        "title": "Asset puchase Date"
     },
     {
         "key": 1,
-        "title": "Data value"
+        "title": "Asset name"
     },
     {
         "key": 2,
-        "title": "STATUS"
+        "title": "Description"
     },
     {
         "key": 3,
-        "title": "UNITS"
+        "title": "Puchase cost"
     },
     {
         "key": 4,
-        "title": "Subject"
+        "title": "Estimate resale value"
     },
     {
         "key": 5,
-        "title": "Group"
+        "title": "Net cost"
     },
     {
         "key": 6,
-        "title": "Series title 1"
+        "title": "Annual depreciation"
     },
     {
         "key": 7,
-        "title": "Series title 2"
+        "title": "Transfer Date"
     },
     {
         "key": 8,
-        "title": "Series title 3"
+        "title": "Transfer Value"
     },
     {
         "key": 9,
-        "title": "Series title 4"
+        "title": "Disposal Date"
     },
     {
         "key": 10,
-        "title": "Series title 5"
+        "title": "Asset Held for Sales Date"
     }
 ]
 
