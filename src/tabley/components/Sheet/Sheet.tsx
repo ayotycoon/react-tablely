@@ -422,11 +422,12 @@ function Sheet(props: SheetPropsI) {
 
   }
 
-  function handleEditableOnBlur(e: any, initialRowIndex: number, columnIndex: number) {
+  function handleEditableOnBlur(e: any, initialRowIndex: number,renderedRowIndex:number, columnIndex: number) {
  
     const key = props.headerDataRef.current[columnIndex].key;
 
     props.initialDataRef.current[initialRowIndex-1][key] = e.target.innerText;
+    paginatedBodyData[renderedRowIndex][key] = e.target.innerText;
 
 
    
@@ -504,7 +505,7 @@ function Sheet(props: SheetPropsI) {
         <br />
         <small>Rendered length: {paginatedBodyData.length} </small>
         <br />
-        {paginatedBodyData[paginatedBodyData.length - 1] && <small>Last Rendered Item: {paginatedBodyData[paginatedBodyData.length - 1][0]} </small>}
+        {paginatedBodyData[paginatedBodyData.length - 1] && <small>Last Rendered Item Id: {paginatedBodyData[paginatedBodyData.length - 1].id} </small>}
         <br />
         <small>Total length: {props.initialDataRef.current.length} </small>
         <br />

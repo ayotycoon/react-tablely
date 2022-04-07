@@ -10,7 +10,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
     paginatedBodyData: BodyI[];
     selectedCellIndex: number[][];
     gridTemplateColumns: string;
-    handleEditableOnBlur: (e: any, initialRowIndex: number, columnIndex: number) => void;
+    handleEditableOnBlur: (e: any, initialRowIndex: number, renderedRowIndex:number,columnIndex: number) => void;
     onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellEdgeDrag: (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
@@ -24,7 +24,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
     return (
         <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
 
-            {row.map((eachRow, rowIndex) => {
+            {row.map((eachRow, renderedRowIndex) => {
                 return headerData.map((column, columnIndex) => {
                     // @ts-ignore
                     const cellData = header ? column.title : (eachRow[column.key] || "");
@@ -65,7 +65,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                         styleObj.textAlign = "center";
                         styleObj.fontWeight = "600";
                     }
-                    if (header && rowIndex == 0) {
+                    if (header && renderedRowIndex == 0) {
                         styleObj.backgroundColor = Settings.firstRowBackground;
                         styleObj.textAlign = "center";
                         styleObj.fontWeight = "600";
@@ -81,7 +81,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                         styleObj.borderLeft = Settings.selectedRowOrColumnBorderColor;
                         styleObj.borderRight = Settings.selectedRowOrColumnBorderColor;
 
-                        if (rowIndex == 0 && header) styleObj.borderTop = Settings.selectedRowOrColumnBorderColor;
+                        if (renderedRowIndex == 0 && header) styleObj.borderTop = Settings.selectedRowOrColumnBorderColor;
 
                     }
                     // Analysing row
@@ -116,7 +116,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                     return (<div key={columnIndex} style={styleObj}>
                         <div
                             onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)}
-                            onBlur={canEdit ? (e) => handleEditableOnBlur(e,editableCellIndex[0],editableCellIndex[1]) : undefined}
+                            onBlur={canEdit ? (e) => handleEditableOnBlur(e,editableCellIndex[0],renderedRowIndex,editableCellIndex[1]) : undefined}
                             contentEditable={canEdit}
                             onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)}
                             style={{ width: "100%",
@@ -131,16 +131,16 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 
                         {(columnIndex == 0 && !header) && <div
                             draggable="true"
-                            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 0, true)}
-                            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 1, true)}
-                            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 2, true)}
+                            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 0, true)}
+                            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 1, true)}
+                            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 2, true)}
                             // bottom-cell
                             style={{ cursor: "row-resize", height: "2px", width: "100%", position: "absolute", bottom: "-2px", left: 0, zIndex: 1, background: Settings.debug ? 'red' : undefined }}></div>}
                         {(header) && <div
                             draggable="true"
-                            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 0, false)}
-                            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 1, false)}
-                            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, rowIndex, columnIndex, e, 2, false)}
+                            onDragStart={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 0, false)}
+                            onDrag={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 1, false)}
+                            onDragEnd={(e) => handleCellEdgeDrag(initialRowIndex, renderedRowIndex, columnIndex, e, 2, false)}
 
                             // right-cell
                             style={{ cursor: "col-resize", height: "100%", width: "2px", position: "absolute", top: 0, right: "-2px", zIndex: 1, background: Settings.debug ? 'red' : undefined }}></div>}

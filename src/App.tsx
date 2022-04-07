@@ -24,18 +24,7 @@ const headerDataRef = useRef(sample.headerData as HeaderI[]);
 
   return (
     <>
-      {/* <Sheet
-      initialDataRef={(initialDataRef)}
-      headerDataRef={headerDataRef}
-    //  dataColOptions={{4: {backgroundColor: "rgba(0, 128, 0, 0.534)"}}}
-      width={width}
-      height={height}
-      onSelectedCellChange={(val: any) => {
 
-        // console.log(val)
-      }}
-
-    /> */}
       <SheetsNavigator data={[
         {
           initialDataRef,

@@ -14,7 +14,7 @@ function SheetNavigatorCell({ sheet, option, index, activeSheetIndex, funChangeS
     return (
         <div onClick={sheet ? () => funChangeSheetIndex(index) : () => onOption(option.action)} style={{ display: 'inline-block', cursor: "pointer", fontWeight: "bold", padding: "5px 10px", borderLeft: Settings.borderColorAtMiddle, borderRight: Settings.borderColorAtMiddle, color: sheet && activeSheetIndex == index ? Settings.selectedCellColor : "rgb(70, 70, 70)" }}>
             {!option ? sheet : ""}
-            {option ? <i className={option.icon} /> : ""}
+            {option ? <i className={option.icon}></i> : ""}
         </div>)
 
 }
