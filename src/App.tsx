@@ -5,7 +5,7 @@ import Sheet from './tabley/components/Sheet/Sheet';
 import dataTransformer from './tabley/utils/dataTransformer';
 import SheetsNavigator from './tabley/components/SheetsNavigator/SheetsNavigator';
 import { BodyI, HeaderI } from './tabley/interfaces/InputI.interface';
-import * as sample from './sampleSmall'
+import * as sample from './sampleLarge'
 
 
 

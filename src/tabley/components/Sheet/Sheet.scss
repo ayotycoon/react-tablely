@@ -2,10 +2,7 @@ $thumb: rgba(188, 188, 188, 1);
 $bg: white;
 
 .Sheet {
-    [contenteditable]{
-        -webkit-user-select: text;
-        user-select: text;
-    }
+
     * {
         -webkit-touch-callout: none; /* iOS Safari */
         -webkit-user-select: none; /* Safari */
@@ -42,25 +39,33 @@ $bg: white;
 
     .ContextMenu {
         background-color: white;
-        padding: 0.5rem;
+        padding: 0.3rem;
         border-radius: 0.5rem;
         position: fixed;
         z-index: 5;
         color: black;
         box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         border: 1px solid rgba(0, 0, 0, 0.15);
-        width: 200px;
+        width: 140px;
 
         .ContextMenuOption {
             height: 24;
-            padding: 7px 5px;
+            padding: 5px 5px;
             border-radius: 0.25rem;
             display:grid;
             grid-template-columns: 20px auto;
+            font-size: 12px;
             &:hover{
                 background-color: #4786d8;
                 cursor: pointer;
             }
+            
         }
+    }
+
+
+    [contenteditable="true"]{
+        -webkit-user-select: text;
+        user-select: text;
     }
 }

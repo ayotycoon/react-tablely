@@ -267,11 +267,11 @@ function Sheet(props: SheetPropsI) {
 
 
   const handleCellContextMenu = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    let approxContextMenuHeight = 110;
-    let approxContextMenuWidth = 200;
+    let approxContextMenuHeight = 90;
+    let approxContextMenuWidth = 140;
     const res = onCellClick(initialRowIndex, columnIndex, isHeader, e, true);
     if (!res) return;
-    if (res == CellAction.SelectedCell) approxContextMenuHeight = 48;
+    if (res == CellAction.SelectedCell) approxContextMenuHeight = 35;
 
       let y = e.clientY;
     let x = e.clientX;
@@ -491,7 +491,7 @@ function Sheet(props: SheetPropsI) {
 
     {contextMenuPosition && <div className='ContextMenu' style={{ top: contextMenuPosition[0], left: contextMenuPosition[1], }}>
       {allOptions.map((option, i) => option.fn(selectedCellIndex, props.initialDataRef.current.length) ? <div onClick={() => onContextMenuItemClick(option.key)} className='ContextMenuOption' key={option.text} style={{}}>
-        <div><i className={option.fa}></i></div>
+        <div><i className={"icon "+option.fa}></i></div>
         <div>{option.text}</div>
 
       </div> : <span key={option.text}></span>)}
