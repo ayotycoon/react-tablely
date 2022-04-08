@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/react-tablely/static/css/main.8bc8296b.css",
+    "main.js": "/react-tablely/static/js/main.9c6d1fc9.js",
+    "static/js/787.59b3f5f8.chunk.js": "/react-tablely/static/js/787.59b3f5f8.chunk.js",
+    "index.html": "/react-tablely/index.html",
+    "main.8bc8296b.css.map": "/react-tablely/static/css/main.8bc8296b.css.map",
+    "main.9c6d1fc9.js.map": "/react-tablely/static/js/main.9c6d1fc9.js.map",
+    "787.59b3f5f8.chunk.js.map": "/react-tablely/static/js/787.59b3f5f8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8bc8296b.css",
+    "static/js/main.9c6d1fc9.js"
+  ]
+}
