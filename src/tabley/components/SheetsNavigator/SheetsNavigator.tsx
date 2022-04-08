@@ -1,4 +1,5 @@
 import react, { useEffect, useRef, useState } from "react";
+import { SheetsNavigatorBottomAction } from "../../interfaces/InputI.interface";
 import { SheetPropsI } from "../../interfaces/SheetPropsI.interface";
 import Settings from "../../Settings";
 import Sheet from "../Sheet/Sheet";
@@ -18,22 +19,21 @@ function SheetNavigatorCell({ sheet, option, index, activeSheetIndex, funChangeS
         </div>)
 
 }
-enum SheetsNavigatorBottomAction {
-    Add,
 
+interface SheetNavigatorPropsI {
+    dataRef: React.MutableRefObject<SheetPropsI[]>,
+    additions?: SheetPropsI[]
 }
 
 
+export default function SheetsNavigator(props: SheetNavigatorPropsI) {
 
-export default function SheetsNavigator({ data }: {
-    data: SheetPropsI[]
-}) {
-
+    const data = props.dataRef.current;
 
     const [sheetsList, setSheetsList] = useState([] as string[])
     const [activeSheetIndex, setActiveSheetIndex] = useState(0);
     const options = [
-        { action: SheetsNavigatorBottomAction.Add, icon: "fa fa-plus" },
+        { action: SheetsNavigatorBottomAction.Add, icon: "fa fa-plus", fn: (data: any[], additions: any[]) => data.length < additions.length + 1 }
     ]
 
     const sheetRef = useRef(null as any)
@@ -42,7 +42,10 @@ export default function SheetsNavigator({ data }: {
     function onOption(option: SheetsNavigatorBottomAction) {
         if (option == SheetsNavigatorBottomAction.Add) {
             const _sheetsList = [...sheetsList];
-            _sheetsList.push("Sheet " + (_sheetsList.length + 1))
+            _sheetsList.push("Sheet " + (_sheetsList.length + 1));
+
+            // @ts-ignore
+            data.push(props.additions[data.length - 1])
             setSheetsList(_sheetsList)
         }
 
@@ -77,6 +80,8 @@ export default function SheetsNavigator({ data }: {
 
         setSheetsList(_sheetsList)
     }, [])
+
+
     return (
         <div style={{}}>
 
@@ -102,10 +107,11 @@ export default function SheetsNavigator({ data }: {
 
                 {options.map((option, i) => {
                     //@ts-ignore
-                    return <SheetNavigatorCell
-                        key={option.action}
+                    return option.fn(data, props.additions) ? <SheetNavigatorCell
+                        key={i}
                         option={option}
-                        onOption={onOption} />
+
+                        onOption={onOption} /> : <> </>
                 })}
 
             </div>

@@ -144,7 +144,7 @@ function Sheet(props: SheetPropsI) {
     })
     setDataColOptions(_dataColOptions);
     setGridTemplateColumns(_gridTemplateColumns);
-    onPageAction(PageAction.UP)
+    onPageRowAction(PageAction.UP)
 
   }
   useEffect(() => {
@@ -339,7 +339,7 @@ function Sheet(props: SheetPropsI) {
       if (paginationRef.current.higherPage != 0) paginationRef.current.lowerPage = paginationRef.current.higherPage
       paginationRef.current.higherPage++
       console.log("scroll up")
-      onPageAction(PageAction.UP)
+      onPageRowAction(PageAction.UP)
       parentScrollRef.current.lastScrollPosition = "up";
     } else if (isTopInView && paginationRef.current.lowerPage > 0) {
       parentScrollRef.current.detect = false;
@@ -347,7 +347,7 @@ function Sheet(props: SheetPropsI) {
       paginationRef.current.lowerPage--;
       paginationRef.current.higherPage = paginationRef.current.lowerPage + 1
       console.log("scroll down")
-      onPageAction(PageAction.Down)
+      onPageRowAction(PageAction.Down)
       parentScrollRef.current.lastScrollPosition = "down";
     }
 
@@ -361,7 +361,7 @@ function Sheet(props: SheetPropsI) {
   }
 
 
-  function onPageAction(direction: PageAction) {
+  function onPageRowAction(direction: PageAction) {
     let tempData = dataRef.current;
     const viewableCount = Math.ceil(height / Settings.defaultHeight);
 
@@ -463,10 +463,8 @@ function Sheet(props: SheetPropsI) {
           const initialData = ev.data;
           props.initialDataRef.current = initialData;
 
-          onPageAction(PageAction.Refresh)
+          onPageRowAction(PageAction.Refresh)
         }
-
-
         break;
       case OptionKey.InsertBelow:
         myWorker.postMessage({ action: OptionKey.InsertBelow, initialData: props.initialDataRef.current, initialRowIndex: selectedCellIndex[0][0] });
@@ -474,10 +472,26 @@ function Sheet(props: SheetPropsI) {
           const initialData = ev.data;
           props.initialDataRef.current = initialData;
 
-          onPageAction(PageAction.Refresh)
+          onPageRowAction(PageAction.Refresh)
         }
+        break;
+      case OptionKey.InsertLeft:
+        myWorker.postMessage({ action: OptionKey.InsertLeft, headerData: props.headerDataRef.current, columnIndex: selectedCellIndex[1][0] });
+        myWorker.onmessage = (ev: MessageEvent<any>) => {
+          const headerData = ev.data;
+        
+          props.headerDataRef.current = headerData;
 
 
+          let _gridTemplateColumns = "";
+          props.headerDataRef.current.forEach((x, columnIndex) => {
+            _gridTemplateColumns += (`${columnIndex == 0 ? "" : " "}${dataColOptions[columnIndex]?.width || defaultWidth}px`)
+          })
+  
+          setGridTemplateColumns(_gridTemplateColumns)
+
+        
+        }
         break;
 
       default:

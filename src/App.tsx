@@ -10,36 +10,46 @@ import * as sample from './sampleLarge'
 
 
 function App() {
-  const height = window.innerHeight - 52;
-  const width = window.innerWidth;
-
-  let initialDataRef = useRef(sample.initialData as unknown as BodyI[]);
-dataTransformer(initialDataRef.current)
 
 
 
-const headerDataRef = useRef(sample.headerData as HeaderI[]);
+  const dataRef = useRef([
+    {
+      initialDataRef: useRef(sample.initialData as unknown as BodyI[]),
+      headerDataRef: useRef(sample.headerData as HeaderI[]),
+      width: window.innerWidth,
+      height: window.innerHeight - 52
 
+    }
+  ])
 
+  const additions = [
+    {
+      initialDataRef: useRef([{ id: 1 }]),
+      headerDataRef: useRef(dataRef.current[0].headerDataRef.current),
+      width: dataRef.current[0].width,
+      height: dataRef.current[0].height
+
+    },
+    {
+      initialDataRef: useRef([{ id: 1 }]),
+      headerDataRef: useRef(dataRef.current[0].headerDataRef.current),
+      width: dataRef.current[0].width,
+      height: dataRef.current[0].height
+
+    },
+  ]
+
+  dataTransformer(dataRef.current[0].initialDataRef.current)
 
   return (
     <>
 
-      <SheetsNavigator data={[
-        {
-          initialDataRef,
-          headerDataRef,
-          width,
-          height
-        
-        },
-        // {
-        //   initialDataRef: [[1, 2, 3, 4]] as any,
-        //   headerDataRef: [["S/N", "b", "ff", "uuu"]],
-        //   width,
-        //   height
-        // }
-      ]} />
+      <SheetsNavigator
+        dataRef={dataRef}
+        additions={additions}
+
+      />
     </>
   );
 }

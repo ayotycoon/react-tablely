@@ -1,17 +1,18 @@
-import react from "react";
+import react, { useRef } from "react";
 import { DataColOption, DataRowOption } from "../../interfaces/DataOptionI.interface";
 import { BodyI, HeaderI } from "../../interfaces/InputI.interface";
 import Settings from "../../Settings";
 import Os from "../../utils/Os";
+import SafariTouchContextMenu from "../../utils/SafariTouchContextMenu";
 
-export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplateColumns, onCellClick, handleEditableOnBlur,handleCellContextMenu, handleCellEdgeDrag, editableCellIndex, dataRowOptions, dataColOptions }: {
+export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplateColumns, onCellClick, handleEditableOnBlur, handleCellContextMenu, handleCellEdgeDrag, editableCellIndex, dataRowOptions, dataColOptions }: {
 
 
     headerData: HeaderI[],
     paginatedBodyData: BodyI[];
     selectedCellIndex: number[][];
     gridTemplateColumns: string;
-    handleEditableOnBlur: (e: any, initialRowIndex: number, renderedRowIndex:number,columnIndex: number) => void;
+    handleEditableOnBlur: (e: any, initialRowIndex: number, renderedRowIndex: number, columnIndex: number) => void;
     onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
     handleCellEdgeDrag: (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
@@ -22,6 +23,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 }) => {
     const header = !paginatedBodyData
     const row = header ? [[0]] : paginatedBodyData;
+    const safariTouchContextMenuRef =  useRef(null as any as SafariTouchContextMenu);
     return (
         <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
 
@@ -111,20 +113,28 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 
 
                     const canEdit = !header && editableCellIndex[0] == initialRowIndex && editableCellIndex[1] == columnIndex;
-                 
+
 
 
                     return (<div key={columnIndex} style={styleObj}>
                         <div
                             onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)}
-                          //  onTouchStart={Os.isMobileIos() ? (e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e): undefined}
-                            onBlur={canEdit ? (e) => handleEditableOnBlur(e,editableCellIndex[0],renderedRowIndex,editableCellIndex[1]) : undefined}
+                            onTouchStart={Os.isMobileIos() ? (e) => {
+
+                                safariTouchContextMenuRef.current = new SafariTouchContextMenu(()=>handleCellContextMenu(initialRowIndex, columnIndex, header, e), initialRowIndex + "" + columnIndex)
+                            } : undefined}
+                            onTouchEnd={Os.isMobileIos() ? (e) => {
+
+                                safariTouchContextMenuRef.current.end(initialRowIndex + "" + columnIndex)
+                            } : undefined}
+                            onBlur={canEdit ? (e) => handleEditableOnBlur(e, editableCellIndex[0], renderedRowIndex, editableCellIndex[1]) : undefined}
                             contentEditable={canEdit}
                             onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)}
-                            style={{ width: "100%",
-                                height: canEdit? undefined :`${(dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight)}px`,
+                            style={{
+                                width: "100%",
+                                height: canEdit ? undefined : `${(dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight)}px`,
                                 overflow: "hidden", padding: "1px 2px",
-                                border: canEdit ? "1px solid " + Settings.selectedCellColor: undefined,
+                                border: canEdit ? "1px solid " + Settings.selectedCellColor : undefined,
                                 backgroundColor: canEdit ? "white" : undefined,
                                 position: canEdit ? "absolute" : undefined,
                                 zIndex: canEdit ? 5 : undefined,

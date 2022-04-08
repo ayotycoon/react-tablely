@@ -14,7 +14,7 @@ export default {
     defaultHeight: 20,
     defaultWidth: 60,
     defaultColColor: "white",
-    debug: true,
+    debug: false,
 
 
 

@@ -15,3 +15,9 @@ id: number;
 
   
   }
+
+  export enum SheetsNavigatorBottomAction {
+    Add,
+    Remove,
+
+}
