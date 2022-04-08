@@ -1,4 +1,4 @@
-const diff = 700;
+const diff = 500;
 export default class SafariTouchContextMenu {
     fn: any;
     id = 999999;
