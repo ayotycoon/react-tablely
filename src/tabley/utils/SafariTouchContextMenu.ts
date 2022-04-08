@@ -10,7 +10,7 @@ export default class SafariTouchContextMenu {
     }
 
     end = (id: any) => {
-        if (id == this.id && (Number(new Date()) - this.start) <= diff) {
+        if (id == this.id && (Number(new Date()) - this.start) >= diff) {
             this.fn()
         }
     }
