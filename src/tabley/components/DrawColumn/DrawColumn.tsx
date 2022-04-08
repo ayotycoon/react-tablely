@@ -121,7 +121,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                             onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e.clientX, e.clientY)}
                             onTouchStart={Os.isMobileIos() ? (e) => {
                                 // @ts-ignore
-                                safariTouchContextMenuRef.current = new SafariTouchContextMenu(() => handleCellContextMenu(initialRowIndex, columnIndex, header, (e.touches[0] || e.originalEvent.changedTouches[0]).pageX, (e.touches[0] || e.originalEvent.changedTouches[0]).pageY))
+                                safariTouchContextMenuRef.current = new SafariTouchContextMenu(() => handleCellContextMenu(initialRowIndex, columnIndex, header, (e.touches[0] || e.originalEvent.changedTouches[0]).pageX, (e.touches[0] || e.originalEvent?.changedTouches[0]).pageY))
                             } : undefined}
                             onTouchEnd={Os.isMobileIos() ? (e) => {
 
