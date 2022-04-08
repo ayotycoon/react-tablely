@@ -267,15 +267,13 @@ function Sheet(props: SheetPropsI) {
   }
 
 
-  const handleCellContextMenu = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  const handleCellContextMenu = (initialRowIndex: number, columnIndex: number, isHeader: boolean, x:number,y: number) => {
     let approxContextMenuHeight = 90;
     let approxContextMenuWidth = 140;
-    const res = onCellClick(initialRowIndex, columnIndex, isHeader, e, true);
+    const res = onCellClick(initialRowIndex, columnIndex, isHeader, x,y, true);
     if (!res) return;
     if (res == CellAction.SelectedCell) approxContextMenuHeight = 35;
 
-      let y = e.clientY;
-    let x = e.clientX;
 
     if (y + approxContextMenuHeight > height) {
       y -= approxContextMenuHeight;
@@ -288,7 +286,7 @@ function Sheet(props: SheetPropsI) {
 
     setContextMenuPosition([y, x]);
   }
-  const onCellClick = (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: React.MouseEvent<HTMLDivElement, MouseEvent>, fromContext?: boolean) => {
+  const onCellClick = (initialRowIndex: number, columnIndex: number, isHeader: boolean, x:number,y: number, fromContext?: boolean) => {
 
     if (isHeader && columnIndex == 0) return CellAction.NoAction;
     setEditableCellIndex([-1, -1])

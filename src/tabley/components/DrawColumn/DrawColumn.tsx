@@ -13,8 +13,8 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
     selectedCellIndex: number[][];
     gridTemplateColumns: string;
     handleEditableOnBlur: (e: any, initialRowIndex: number, renderedRowIndex: number, columnIndex: number) => void;
-    onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
-    handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, e: any) => void;
+    onCellClick: (initialRowIndex: number, columnIndex: number, isHeader: boolean, x: number, y: number) => void;
+    handleCellContextMenu: (initialRowIndex: number, columnIndex: number, isHeader: boolean, x: number, y: number) => void;
     handleCellEdgeDrag: (initialRowIndex: number, rowIndex: number, columnIndex: number, e: React.DragEvent<HTMLDivElement>, action: number, isHeight: boolean) => void;
     editableCellIndex: number[];
 
@@ -23,7 +23,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 }) => {
     const header = !paginatedBodyData
     const row = header ? [[0]] : paginatedBodyData;
-    const safariTouchContextMenuRef =  useRef(null as any as SafariTouchContextMenu);
+    const safariTouchContextMenuRef = useRef(null as any as SafariTouchContextMenu);
     return (
         <div className={header ? "HeaderRow" : "BodyRow"} style={{ display: 'grid', gridTemplateColumns: gridTemplateColumns }}>
 
@@ -118,10 +118,10 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
 
                     return (<div key={columnIndex} style={styleObj}>
                         <div
-                            onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e)}
+                            onContextMenu={(e) => handleCellContextMenu(initialRowIndex, columnIndex, header, e.clientX, e.clientY)}
                             onTouchStart={Os.isMobileIos() ? (e) => {
-
-                                safariTouchContextMenuRef.current = new SafariTouchContextMenu(()=>handleCellContextMenu(initialRowIndex, columnIndex, header, e), initialRowIndex + "" + columnIndex)
+                                // @ts-ignore
+                                safariTouchContextMenuRef.current = new SafariTouchContextMenu(() => handleCellContextMenu(initialRowIndex, columnIndex, header, (e.touches[0] || e.originalEvent.changedTouches[0]).pageX, (e.touches[0] || e.originalEvent.changedTouches[0]).pageY), initialRowIndex + "" + columnIndex)
                             } : undefined}
                             onTouchEnd={Os.isMobileIos() ? (e) => {
 
@@ -129,7 +129,7 @@ export default ({ headerData, paginatedBodyData, selectedCellIndex, gridTemplate
                             } : undefined}
                             onBlur={canEdit ? (e) => handleEditableOnBlur(e, editableCellIndex[0], renderedRowIndex, editableCellIndex[1]) : undefined}
                             contentEditable={canEdit}
-                            onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e)}
+                            onClick={(e) => onCellClick(initialRowIndex, columnIndex, header, e.clientX, e.clientY)}
                             style={{
                                 width: "100%",
                                 height: canEdit ? undefined : `${(dataRowOptions[initialRowIndex]?.height || Settings.defaultHeight)}px`,
