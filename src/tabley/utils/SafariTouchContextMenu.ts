@@ -2,13 +2,11 @@ const diff = 500;
 export default class SafariTouchContextMenu {
 
     ref = null as any;
-    constructor(fn: any,) {
+    constructor(fn: any) {
 
 
 
-        this.ref = setTimeout(() => {
-            fn()
-        }, diff);
+        this.ref = setTimeout(fn, diff);
     }
 
     end = () => {
