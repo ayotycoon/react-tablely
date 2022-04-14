@@ -30,7 +30,7 @@ export default [
   },
   {
     input: "src/tabley/index.d.ts",
-    output: [{ file: "dist/esm/tabley/index.d.ts", format: "esm" }],
+    output: [{ file: "dist/index.d.ts", format: "esm" }],
     plugins: [dts()],
   },
 ];
