@@ -1,12 +1,13 @@
 {
   "name": "@ayotycoon/react-tablely",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "homepage": "/react-tablely",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/ayotycoon"
   },
   "dependencies": {
+    "@ayotycoon/react-tablely": "^0.1.1",
     "@testing-library/jest-dom": "^5.16.2",
     "@testing-library/react": "^12.1.4",
     "@testing-library/user-event": "^13.5.0",
