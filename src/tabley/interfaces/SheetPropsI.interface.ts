@@ -11,3 +11,8 @@ export interface SheetPropsI {
     sheetRef?: React.MutableRefObject<any>
   
   }
+
+  export interface SheetNavigatorPropsI {
+    dataRef: React.MutableRefObject<SheetPropsI[]>,
+    additions?: SheetPropsI[]
+}

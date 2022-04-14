@@ -1,6 +1,6 @@
 import react, { useEffect, useRef, useState } from "react";
 import { SheetsNavigatorBottomAction } from "../../interfaces/InputI.interface";
-import { SheetPropsI } from "../../interfaces/SheetPropsI.interface";
+import { SheetNavigatorPropsI, SheetPropsI } from "../../interfaces/SheetPropsI.interface";
 import Settings from "../../Settings";
 import Sheet from "../Sheet/Sheet";
 
@@ -20,10 +20,7 @@ function SheetNavigatorCell({ sheet, option, index, activeSheetIndex, funChangeS
 
 }
 
-interface SheetNavigatorPropsI {
-    dataRef: React.MutableRefObject<SheetPropsI[]>,
-    additions?: SheetPropsI[]
-}
+
 
 
 export default function SheetsNavigator(props: SheetNavigatorPropsI) {
