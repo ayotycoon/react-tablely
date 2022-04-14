@@ -8,7 +8,7 @@ const packageJson = require("./package.json");
 
 export default [
   {
-    input: "src/tabley/index.ts",
+    input: "src/tablely/index.ts",
     output: [
       {
         file: packageJson.main,
@@ -29,7 +29,7 @@ export default [
     ],
   },
   {
-    input: "src/tabley/index.d.ts",
+    input: "src/tablely/index.d.ts",
     output: [{ file: "dist/index.d.ts", format: "esm" }],
     plugins: [dts()],
   },

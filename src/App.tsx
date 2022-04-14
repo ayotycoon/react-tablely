@@ -2,12 +2,15 @@ import React, { useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.scss';
 
-import dataTransformer from './tabley/utils/dataTransformer';
-import {SheetsNavigator} from './tabley';
-import { BodyI, HeaderI } from './tabley';
+import {SheetsNavigator} from './tablely';
+import { BodyI, HeaderI } from './tablely';
 import * as sample from './sampleLarge'
 
-
+const dataTransformer = (data:any) => {
+  data.forEach((row: any, i: number) => {
+row.id = i+1;
+  })
+}
 
 function App() {
 
