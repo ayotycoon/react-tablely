@@ -1,10 +1,10 @@
 import React, { useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.scss';
-import Sheet from './tabley/components/Sheet/Sheet';
+
 import dataTransformer from './tabley/utils/dataTransformer';
-import SheetsNavigator from './tabley/components/SheetsNavigator/SheetsNavigator';
-import { BodyI, HeaderI } from './tabley/interfaces/InputI.interface';
+import {SheetsNavigator} from './tabley';
+import { BodyI, HeaderI } from './tabley';
 import * as sample from './sampleLarge'
 
 
@@ -29,7 +29,6 @@ function App() {
       headerDataRef: useRef(dataRef.current[0].headerDataRef.current),
       width: dataRef.current[0].width,
       height: dataRef.current[0].height
-
     },
     {
       initialDataRef: useRef([{ id: 1 }]),
